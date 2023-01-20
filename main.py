@@ -1,99 +1,63 @@
 import requests
-import json
-from bs4 import BeautifulSoup
 import time
-import curlfunc as curlfunc
-import busqueda as busqueda
+import Parser as Parser
+import sys, getopt
+import download as download
 
-inicio = time.time()
-
-
-cookies = curlfunc.get_cookie()
-headers = curlfunc.get_headers()
-
-data = {
-    'log_performance_metrics': 'true',
-    'specs[async_search_results][]': 'Search2_ApiSpecs_WebSearch',
-    'specs[async_search_results][1][search_request_params][detected_locale][language]': 'es',
-    'specs[async_search_results][1][search_request_params][detected_locale][currency_code]': 'EUR',
-    'specs[async_search_results][1][search_request_params][detected_locale][region]': 'ES',
-    'specs[async_search_results][1][search_request_params][locale][language]': 'es',
-    'specs[async_search_results][1][search_request_params][locale][currency_code]': 'EUR',
-    'specs[async_search_results][1][search_request_params][locale][region]': 'ES',
-    'specs[async_search_results][1][search_request_params][name_map][query]': 'q',
-    'specs[async_search_results][1][search_request_params][name_map][query_type]': 'qt',
-    'specs[async_search_results][1][search_request_params][name_map][results_per_page]': 'result_count',
-    'specs[async_search_results][1][search_request_params][name_map][min_price]': 'min',
-    'specs[async_search_results][1][search_request_params][name_map][max_price]': 'max',
-    'specs[async_search_results][1][search_request_params][parameters][q]': 'pendientes plata',
-    'specs[async_search_results][1][search_request_params][parameters][ref]': 'auto-1',
-    'specs[async_search_results][1][search_request_params][parameters][as_prefix]': 'encuentra nombres de tiendas que contengan pendientes',
-    'specs[async_search_results][1][search_request_params][parameters][page]': '1',
-    'specs[async_search_results][1][search_request_params][parameters][referrer]': 'https://www.etsy.com/es/search?q=pendientes%20de%20oro&ref=auto-1&as_prefix=pendientes%20de%20oro',
-    'specs[async_search_results][1][search_request_params][parameters][is_prefetch]': 'false',
-    'specs[async_search_results][1][search_request_params][parameters][placement]': 'wsg',
-    'specs[async_search_results][1][search_request_params][user_id]': '',
-    'specs[async_search_results][1][request_type]': 'reformulation',
-    'view_data_event_name': 'search_async_reformulation_specview_rendered',
-}
-
-response = requests.post(
-    'https://www.etsy.com/api/v3/ajax/bespoke/member/neu/specs/async_search_results',
-    cookies=cookies,
-    headers=headers,
-    data=data,
-)
-
-def request_item (url):
-    response = requests.get(url)
-    return response
-
-jsondata = response.json()
-
-# OBTENEMOS LOS LAZY LOADED LISTING IDS Y LOS LAZY LOADED AD IDS y lazy_loaded_logging_keys
-if 'jsData' in jsondata:
-    if 'lazy_loaded_listing_ids' in jsondata['jsData']:
-        listing_ids = jsondata['jsData']['lazy_loaded_listing_ids']
-    else:
-        exit('Datos no encontrados de lazy_loaded_listing_ids')
-    if 'lazy_loaded_logging_keys' in jsondata['jsData']:
-        logging_keys = jsondata['jsData']['lazy_loaded_logging_keys']
-    else:
-        exit('Datos no encontrados de lazy_loaded_logging_keys')
-    if 'lazy_loaded_ad_ids' in jsondata['jsData']:
-        ad_ids = jsondata['jsData']['lazy_loaded_ad_ids']
-    else:
-        exit('Datos no encontrados de lazy_loaded_ad_ids')
-else:
-    exit('Datos no encontrados')
+requests.packages.urllib3.disable_warnings()
 
 
-# OBTENEMOS LOS DATOS DE LOS 12 PRIMEROS PRODUCTOS QUE YA VIENEN AQUI
-if 'output' in jsondata:
-    if 'async_search_results' in jsondata['output']:
-        html_text = jsondata['output']['async_search_results']
-    else:
-        exit('Datos no encontrados')
-else:
-    exit('Datos no encontrados')
+def get_help():
+    return "python main.py -k <keyword> -p <codigo_pais> -n <numero_de_paginas>\r\n" \
+           "Ejemplo: main.py -k \"pendientes de plata\" -p ES -n 5"
 
-contador = 0
-soup = BeautifulSoup(html_text, 'html.parser')
-for link in soup.find_all('a'):
-    title = link.get('title')
-    enlace = link.get('href')
-    if (title is not None and enlace is not None):
-        contador=contador+1
-        print(title + ": " + enlace)
-        item_resp = request_item(enlace)
 
-        itemsoup = BeautifulSoup(item_resp.text, 'html.parser')
-        for span in itemsoup.find_all("span", {"class": "wt-badge wt-badge--status-02 wt-ml-xs-2"}):
-            print(str(span.contents[0].strip()))
+def main(argv):
+    keyword = ''
+    country = ''
+    number_pages = 0
+    opts, args = getopt.getopt(argv, "hk:p:n:", ["keyword=", "pais=", "pages="])
+    for opt, arg in opts:
+        if opt == '-h':
+            print('python main.py -k <keyword> -p <codigo_pais> -n <numero_de_paginas>')
+            sys.exit()
+        elif opt in ("-k", "--keyword"):
+            keyword = arg
+        elif opt in ("-p", "--pais"):
+            country = arg
+            if len(country) != 2:
+                print(
+                    "El pais debe estar en su formato ISO-2, puede buscarlo en la siguiente web: https://es.wikipedia.org/wiki/ISO_3166-1_alfa-2")
+                print(get_help())
+                sys.exit()
+        elif opt in ("-n", "--pages"):
+            number_pages = arg
+    if keyword == '' or country == '' or number_pages == 0:
+        print(get_help())
+        sys.exit()
 
-print("Articulos1: " + str(contador))
-#Hacemos la segunda peticion de busqueda:
-busqueda.lazy_second_load(listing_ids, ad_ids, logging_keys)
+    inicio = time.time()
+    dr = Parser.Parser(keyword, country)
+    dr.create_data_table()
+    print("Parseando las " + str(number_pages) + " primeras paginas en " + str(country) + " de: " + str(keyword))
+    for a in range(1, int(number_pages) + 1):
+        response1 = dr.primera_peticion()
+        response2 = dr.segunda_peticion()
+        if response1 == 0 or response2 == 0:
+            break
+        print(str(dr.contador_productos) + " items parseados en la pagina " + str(dr.pagina))
+        dr.pasar_pagina()
 
-fin = time.time()
-print(fin-inicio) # 1.0005340576171875
+    fin = time.time()
+    print("Generando fichero .xlsx")
+    download.downloadfile(dr.dbname)
+    print("Tiempo de ejecucion: " + str(fin - inicio))
+
+
+if __name__ == '__main__':
+    try:
+        main(sys.argv[1:])
+    except SystemExit as e:
+        print('Error!', e)
+        print('Presiona una tecla (y soluciona el problema)')
+        input()

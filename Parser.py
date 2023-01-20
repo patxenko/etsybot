@@ -1,0 +1,308 @@
+import curlfunc as curlfunc
+import requests
+from bs4 import BeautifulSoup
+import sqlite3
+from sqlite3 import Error
+import reviews as reviews
+import xlsxwriter
+from datetime import datetime
+
+
+class Parser:
+    def __init__(self, keyword, country_iso_code):
+        self.deshechados = 0
+        self.listing_ids = []
+        self.logging_keys = []
+        self.ad_ids = []
+        self.contador_productos = 0
+        self.cookies = curlfunc.get_cookie()
+        self.headers = curlfunc.get_headers()
+        self.pagina = 1
+        self.keyword = keyword
+        self.country_iso_code = country_iso_code
+        self.dbname = self.create_db_name()
+        # self.connection = self.create_connection()
+        self.workbook = xlsxwriter.Workbook(self.dbname + datetime.now().strftime("%Y %m %d") + '.xlsx')  # Create file
+        try:
+            self.worksheet = self.workbook.add_worksheet(name='data')  # Sheet names in excel can have up to 31 chars
+        except Exception as e:
+            exit(str(e))
+        self.worksheet.write(0, 0, 'titulo del producto')
+        self.worksheet.write(0, 1, 'URL')
+        self.worksheet.write(0, 2, 'nº reviews past 15 days')
+        self.worksheet.write(0, 3, 'nº reviews past 30 days')
+        self.row_number = 0
+
+    def create_db_name(self):
+        name_ini = self.keyword.replace(" ", "_") + "_" + self.country_iso_code
+        return name_ini
+
+    # def create_data_table(self):
+    #     sql_create_data_table = """CREATE TABLE IF NOT EXISTS data (
+    #                                         name text NOT NULL,
+    #                                         url text NOT NULL,
+    #                                         last15 integer NOT NULL,
+    #                                         last30 integer NOT NULL,
+    #                                         UNIQUE(name,url)
+    #                                     );"""
+    #     try:
+    #         c = self.connection.cursor()
+    #         c.execute(sql_create_data_table)
+    #     except Error as e:
+    #         exit(e)
+
+    def insert_db_data(self, a_insertar):
+        for a in a_insertar:
+            self.row_number = self.row_number + 1
+            try:
+                if '?' in a['url']:
+                    url = a['url'].split('?')[0]
+                task = (a['title'], url, a['last15'], a['last30'])
+                self.worksheet.write(self.row_number, 0, a['title'])
+                self.worksheet.write(self.row_number, 1, url)
+                self.worksheet.write(self.row_number, 2, a['last15'])
+                self.worksheet.write(self.row_number, 3, a['last30'])
+                # sql = ''' INSERT INTO data(name,url,last15,last30)
+                #                       VALUES(?,?,?,?) '''
+                # cur = self.connection.cursor()
+                # cur.execute(sql, task)
+                # self.connection.commit()
+            except Exception as e:
+                exit(e)
+                # if 'UNIQUE constraint' in str(e):
+                #     return
+                # else:
+                #     exit(e)
+
+    # def create_connection(self):
+    #     try:
+    #         conn = sqlite3.connect(self.dbname)
+    #         # print(sqlite3.version)
+    #         return conn
+    #     except Error as e:
+    #         exit(e)
+
+    def request_item(self, url):
+        response = requests.get(url, verify=False)
+        return response
+
+    def pasar_pagina(self):
+        self.pagina = self.pagina + 1
+
+    def primera_peticion(self):
+        print("Primera peticion para la pagina " + str(self.pagina))
+        a_insertar = []
+        self.listing_ids = []
+        self.logging_keys = []
+        self.ad_ids = []
+        data = {
+            'log_performance_metrics': 'true',
+            'specs[async_search_results][]': 'Search2_ApiSpecs_WebSearch',
+            'specs[async_search_results][1][search_request_params][detected_locale][language]': '',
+            'specs[async_search_results][1][search_request_params][detected_locale][currency_code]': 'EUR',
+            'specs[async_search_results][1][search_request_params][detected_locale][region]': self.country_iso_code,
+            'specs[async_search_results][1][search_request_params][locale][language]': 'es',
+            'specs[async_search_results][1][search_request_params][locale][currency_code]': 'EUR',
+            'specs[async_search_results][1][search_request_params][locale][region]': self.country_iso_code,
+            'specs[async_search_results][1][search_request_params][name_map][query]': 'q',
+            'specs[async_search_results][1][search_request_params][name_map][query_type]': 'qt',
+            'specs[async_search_results][1][search_request_params][name_map][results_per_page]': 'result_count',
+            'specs[async_search_results][1][search_request_params][name_map][min_price]': 'min',
+            'specs[async_search_results][1][search_request_params][name_map][max_price]': 'max',
+            'specs[async_search_results][1][search_request_params][parameters][q]': self.keyword,
+            'specs[async_search_results][1][search_request_params][parameters][ref]': 'pagination',
+            'specs[async_search_results][1][search_request_params][parameters][as_prefix]': '',
+            'specs[async_search_results][1][search_request_params][parameters][page]': self.pagina,
+            'specs[async_search_results][1][search_request_params][parameters][referrer]': 'https://www.etsy.com/es/search?q=' + self.keyword,
+            'specs[async_search_results][1][search_request_params][parameters][is_prefetch]': 'false',
+            'specs[async_search_results][1][search_request_params][parameters][placement]': 'wsg',
+            'specs[async_search_results][1][search_request_params][user_id]': '',
+            'specs[async_search_results][1][request_type]': 'reformulation',
+            'view_data_event_name': 'search_async_reformulation_specview_rendered',
+        }
+        response = requests.post(
+            'https://www.etsy.com/api/v3/ajax/bespoke/member/neu/specs/async_search_results',
+            cookies=self.cookies,
+            headers=self.headers,
+            data=data,
+            verify=False
+        )
+        jsondata = response.json()
+        # OBTENEMOS LOS LAZY LOADED LISTING IDS Y LOS LAZY LOADED AD IDS y lazy_loaded_logging_keys
+        if 'jsData' in jsondata:
+            if 'lazy_loaded_listing_ids' in jsondata['jsData']:
+                self.listing_ids = jsondata['jsData']['lazy_loaded_listing_ids']
+            else:
+                print('Datos no encontrados de lazy_loaded_listing_ids')
+            if 'lazy_loaded_logging_keys' in jsondata['jsData']:
+                self.logging_keys = jsondata['jsData']['lazy_loaded_logging_keys']
+            else:
+                print('Datos no encontrados de lazy_loaded_logging_keys')
+            if 'lazy_loaded_ad_ids' in jsondata['jsData']:
+                self.ad_ids = jsondata['jsData']['lazy_loaded_ad_ids']
+            else:
+                print('Datos no encontrados de lazy_loaded_ad_ids')
+        else:
+            exit('Datos no encontrados en jsondata parser 1')
+
+        # OBTENEMOS LOS DATOS DE LOS 12 PRIMEROS PRODUCTOS QUE YA VIENEN AQUI
+        if 'output' in jsondata:
+            if 'async_search_results' in jsondata['output']:
+                html_text = jsondata['output']['async_search_results']
+            else:
+                exit('Datos no encontrados async')
+        else:
+            exit('Datos no encontrados output')
+
+        soup = BeautifulSoup(html_text, 'html.parser')
+        for div in soup.find_all("li"):
+            for li in div.find_all(attrs={"data-page-type": "search"}):
+                for link in li.find_all('a'):
+                    title = link.get('title')
+                    enlace = link.get('href')
+                    data_shop_id = li.get('data-shop-id')
+                    data_listing_id = link.get('data-listing-id')
+                    if title is not None and enlace is not None:
+                        if data_listing_id is None or data_shop_id is None:
+                            self.deshechados = self.deshechados + 1
+                            continue
+                        self.contador_productos = self.contador_productos + 1
+                        item_resp = self.request_item(enlace)
+                        itemsoup = BeautifulSoup(item_resp.text, 'html.parser')
+                        if len(itemsoup.find_all("span", {"class": "wt-badge wt-badge--status-02 wt-ml-xs-2"})) > 0:
+                            rev = reviews.reviews(data_shop_id, data_listing_id)
+                            reviews_totales = rev.get_reviews_que_cumple()
+                            reviews_totales_quince = rev.contador_reviews_quince
+                        else:
+                            reviews_totales = 0
+                            reviews_totales_quince = 0
+                        dictio = {'title': title, 'url': enlace, 'last15': reviews_totales_quince,
+                                  'last30': reviews_totales}
+                        a_insertar.append(dictio)
+        if len(a_insertar) > 0:
+            self.insert_db_data(a_insertar)
+        # print("Productos:" + str(self.contador_productos) + " en la pagina " + str(self.pagina))
+        return response
+
+    def segunda_peticion(self):
+        a_insertar = []
+        if len(self.listing_ids) == 0:
+            print("Listing ids vacio")
+            return 0
+        cookies = curlfunc.get_cookie()
+        headers = curlfunc.get_headers()
+
+        data = {
+            'log_performance_metrics': 'true',
+            'specs[listingCards][]': 'Search2_ApiSpecs_LazyListingCards',
+            'specs[listingCards][1][search_request_params][detected_locale][language]': 'es',
+            'specs[listingCards][1][search_request_params][detected_locale][currency_code]': 'EUR',
+            'specs[listingCards][1][search_request_params][detected_locale][region]': self.country_iso_code,
+            'specs[listingCards][1][search_request_params][locale][language]': 'es',
+            'specs[listingCards][1][search_request_params][locale][currency_code]': 'EUR',
+            'specs[listingCards][1][search_request_params][locale][region]': self.country_iso_code,
+            'specs[listingCards][1][search_request_params][name_map][query]': self.keyword,
+            'specs[listingCards][1][search_request_params][name_map][query_type]': 'qt',
+            'specs[listingCards][1][search_request_params][name_map][results_per_page]': 'result_count',
+            'specs[listingCards][1][search_request_params][name_map][min_price]': 'min',
+            'specs[listingCards][1][search_request_params][name_map][max_price]': 'max',
+            'specs[listingCards][1][search_request_params][parameters][q]': self.keyword,
+            'specs[listingCards][1][search_request_params][parameters][ref]': 'auto-1',
+            'specs[listingCards][1][search_request_params][parameters][page]': self.pagina,
+            'specs[listingCards][1][search_request_params][parameters][referrer]': 'https://www.etsy.com/es/search?q=' + self.keyword + '&ref=auto-1&as_prefix=',
+            'specs[listingCards][1][search_request_params][parameters][is_prefetch]': 'false',
+            'specs[listingCards][1][search_request_params][parameters][placement]': 'wsg',
+            'specs[listingCards][1][search_request_params][parameters][page_type]': 'search',
+            'specs[listingCards][1][search_request_params][parameters][bucket_id]': 'HrxgYSwYYa1Nk8GxupoP_jnzjlsM',
+            'specs[listingCards][1][search_request_params][parameters][user_id]': '',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][app_os_version]': '',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][app_version]': '',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][currency]': 'EUR',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][device]': '1,0,0,0,0,0,0,0,0,0,0,0,0,0',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][environment]': '',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][favorited]': '',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][first_visit]': '',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][http_referrer]': '',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][language]': 'es',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][last_login]': '',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][purchases_awaiting_review]': '',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][push_notification_settings]': '',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][region]': self.country_iso_code,
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][region_language_match]': '',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][seller]': '',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][shop_country]': '',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][tier]': '',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][time]': '',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][time_since_last_login]': '',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][time_since_last_purchase]': '',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][user]': '0',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][exclude_groups]': '',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][exclude_users]': '',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][marketplace]': '',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][user_agent]': '',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][user_dataset]': '',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][geoip]': '',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][gdpr]': '',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][email]': '',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][request_restrictions]': '',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][marketing_channel]': '',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][page_enum]': '',
+            'specs[listingCards][1][search_request_params][parameters][filter_distracting_content]': 'true',
+            'specs[listingCards][1][search_request_params][parameters][interleaving_option]': '',
+            'specs[listingCards][1][search_request_params][parameters][should_pass_user_location_to_thrift]': 'true',
+            'specs[listingCards][1][search_request_params][parameters][result_count]': '48',
+            'specs[listingCards][1][search_request_params][user_id]': '',
+            'specs[listingCards][1][is_mobile]': 'false',
+            'specs[listingCards][1][organic_listings_count]': '682295',
+            'view_data_event_name': 'search_lazy_loaded_cards_specview_rendered',
+        }
+        if len(self.listing_ids) > 0:
+            data['specs[listingCards][1][listing_ids][]'] = self.listing_ids
+        if len(self.ad_ids) > 0:
+            data['specs[listingCards][1][ad_ids][]'] = self.ad_ids
+        if len(self.logging_keys) > 0:
+            data['specs[listingCards][1][logging_keys][]'] = self.logging_keys
+        response = requests.post(
+            'https://www.etsy.com/api/v3/ajax/bespoke/member/neu/specs/listingCards',
+            cookies=cookies,
+            headers=headers,
+            data=data,
+            verify=False
+        )
+        jsondata = response.json()
+        if 'output' in jsondata:
+            if 'listingCards' in jsondata['output']:
+                html_text = jsondata['output']['listingCards']
+            else:
+                exit('Datos no encontrados')
+        else:
+            exit('Datos no encontrados en busqueda')
+        soup = BeautifulSoup(html_text, 'html.parser')
+
+        for div in soup.find_all("li"):
+            for li in div.find_all(attrs={"data-page-type": "search"}):
+                for link in li.find_all('a'):
+                    title = link.get('title')
+                    enlace = link.get('href')
+                    data_shop_id = li.get('data-shop-id')
+                    data_listing_id = link.get('data-listing-id')
+                    if title is not None and enlace is not None:
+                        if data_listing_id is None or data_shop_id is None:
+                            self.deshechados = self.deshechados + 1
+                            continue
+                        self.contador_productos = self.contador_productos + 1
+                        item_resp = self.request_item(enlace)
+                        itemsoup = BeautifulSoup(item_resp.text, 'html.parser')
+                        if len(itemsoup.find_all("span", {"class": "wt-badge wt-badge--status-02 wt-ml-xs-2"})) > 0:
+                            rev = reviews.reviews(data_shop_id, data_listing_id)
+                            reviews_totales = rev.get_reviews_que_cumple()
+                            reviews_totales_quince = rev.contador_reviews_quince
+                        else:
+                            reviews_totales = 0
+                            reviews_totales_quince = 0
+                        dictio = {'title': title, 'url': enlace, 'last15': reviews_totales_quince,
+                                  'last30': reviews_totales}
+                        a_insertar.append(dictio)
+        if len(a_insertar) > 0:
+            self.insert_db_data(a_insertar)
+        # print("Articulos2: " + str(self.contador_productos) + " en la pagina " + str(self.pagina))
