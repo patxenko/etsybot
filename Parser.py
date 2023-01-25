@@ -17,12 +17,26 @@ class Parser:
         self.cookies = requests.utils.dict_from_cookiejar(self.jar)
         self.csrf_token = self.get_csrf_token(response1)
 
+        # accept gdpr
+        data = {
+            'third_party_consent': 'true',
+            'personalization_consent': 'true',
+        }
+        self.headers = self.get_headers()
+        response = self.session.post(
+            'https://www.etsy.com/api/v3/ajax/bespoke/member/user-preferences/gdpr',
+            cookies=self.cookies,
+            headers=self.headers,
+            data=data,
+        )
+        self.jar.update(response.cookies)
+        self.cookies = requests.utils.dict_from_cookiejar(self.jar)
+
         self.deshechados = 0
         self.listing_ids = []
         self.logging_keys = []
         self.ad_ids = []
         self.contador_productos = 0
-        self.headers = self.get_headers()
         self.pagina = 1
         self.keyword = keyword
         self.country_iso_code = country_iso_code
@@ -30,7 +44,7 @@ class Parser:
 
         # Primero creamos el fichero
         self.excel_name = self.dbname + datetime.now().strftime("%Y_%m_%d") + '.xlsx'
-        print("The file is : "+'\033[92m'+str(self.excel_name) + '\033[39m')
+        print("The file is : " + '\033[92m' + str(self.excel_name) + '\033[39m')
         wb = openpyxl.Workbook()
         ws = wb.active
         mylist = ['titulo del producto', 'URL', 'nº reviews past 15 days', 'nº reviews past 30 days']
@@ -131,8 +145,6 @@ class Parser:
             data=data,
             verify=False
         )
-        print(self.cookies)
-        print(self.headers)
         self.jar.update(response.cookies)
         self.cookies = requests.utils.dict_from_cookiejar(self.jar)
         jsondata = response.json()
