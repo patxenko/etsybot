@@ -3,48 +3,72 @@ from bs4 import BeautifulSoup
 
 requests.packages.urllib3.disable_warnings()
 
-cookies = {
-    'uaid': 'UBkKv13emHPLDr3vN74gWlX4wiRjZACC5Itu02F0tVJpYmaKkpVSsJehh0VSlre3X1pEqntGUr5piUeeWZ55YEVGvlItAwA.',
-    'user_prefs': '0zFSLEtu3yN_RX4bKDUFii1TJYxjZACC5Itu02F0tJJraJCSTl5pTo6OUmqebmiwko6SazBUxAhC4SJiGQA.',
-    'fve': '1674659479.0',
-    'last_browse_page': 'https%3A%2F%2Fwww.etsy.com%2F',
-    'ua': '531227642bc86f3b5fd7103a0c0b4fd6',
-    'p': 'eyJnZHByX3RwIjoxLCJnZHByX3AiOjF9',
-    'pla_spr': '0',
-    '_gcl_au': '1.1.68641045.1674660812',
-    '_ga': 'GA1.2.1789194991.1674660813',
-    '_gid': 'GA1.2.1179219547.1674660813',
-    '_uetsid': 'a07898009cc511ed829af15fbf5270b9',
-    '_uetvid': 'a078eea09cc511ed93e61dbcefc65e6a',
-    '_derived_epik': 'dj0yJnU9dk01TjR1YTVnT1dzRmVkWVdnMjlET2tHYndWaUNLbGkmbj1xYWhFVklmTEhQUV94WVdIdEIxNnB3Jm09MSZ0PUFBQUFBR1BSUzgwJnJtPTEmcnQ9QUFBQUFHUFJTODAmc3A9NQ',
-    '_pin_unauth': 'dWlkPU4yUTBPR1psWTJJdE1EaGtOUzAwWlRBMkxUazJOMkl0WlRBNE1EazRNamMzTlRKbQ',
-    '_ga_KR3J610VYM': 'GS1.1.1674660813.1.1.1674660893.60.0.0',
-    'tsd': '%7B%22gnav_search_focus%22%3A%7B%22event_name%22%3A%22gnav_search_focus%22%2C%22interaction_type%22%3A%22keyboard%22%7D%2C%22gnav_perform_search%22%3A%7B%22event_name%22%3A%22gnav_perform_search%22%2C%22interaction_type%22%3A%22click%22%7D%7D',
-    'search_options': '{"prev_search_term":"cosas%20nuevas","item_language":null,"language_carousel":null}',
-}
 
-headers = {
-    'Accept': '*/*',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'Connection': 'keep-alive',
-    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-    # 'Cookie': 'uaid=UBkKv13emHPLDr3vN74gWlX4wiRjZACC5Itu02F0tVJpYmaKkpVSsJehh0VSlre3X1pEqntGUr5piUeeWZ55YEVGvlItAwA.; user_prefs=0zFSLEtu3yN_RX4bKDUFii1TJYxjZACC5Itu02F0tJJraJCSTl5pTo6OUmqebmiwko6SazBUxAhC4SJiGQA.; fve=1674659479.0; last_browse_page=https%3A%2F%2Fwww.etsy.com%2F; ua=531227642bc86f3b5fd7103a0c0b4fd6; p=eyJnZHByX3RwIjoxLCJnZHByX3AiOjF9; pla_spr=0; _gcl_au=1.1.68641045.1674660812; _ga=GA1.2.1789194991.1674660813; _gid=GA1.2.1179219547.1674660813; _uetsid=a07898009cc511ed829af15fbf5270b9; _uetvid=a078eea09cc511ed93e61dbcefc65e6a; _derived_epik=dj0yJnU9dk01TjR1YTVnT1dzRmVkWVdnMjlET2tHYndWaUNLbGkmbj1xYWhFVklmTEhQUV94WVdIdEIxNnB3Jm09MSZ0PUFBQUFBR1BSUzgwJnJtPTEmcnQ9QUFBQUFHUFJTODAmc3A9NQ; _pin_unauth=dWlkPU4yUTBPR1psWTJJdE1EaGtOUzAwWlRBMkxUazJOMkl0WlRBNE1EazRNamMzTlRKbQ; _ga_KR3J610VYM=GS1.1.1674660813.1.1.1674660893.60.0.0; tsd=%7B%22gnav_search_focus%22%3A%7B%22event_name%22%3A%22gnav_search_focus%22%2C%22interaction_type%22%3A%22keyboard%22%7D%2C%22gnav_perform_search%22%3A%7B%22event_name%22%3A%22gnav_perform_search%22%2C%22interaction_type%22%3A%22click%22%7D%7D; search_options={"prev_search_term":"cosas%20nuevas","item_language":null,"language_carousel":null}',
-    'Origin': 'https://www.etsy.com',
-    'Referer': 'https://www.etsy.com/search?q=cosas+nuevas',
-    'Sec-Fetch-Dest': 'empty',
-    'Sec-Fetch-Mode': 'cors',
-    'Sec-Fetch-Site': 'same-origin',
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
-    'X-Page-GUID': 'f3b1fa0b12d.97a359182b31b5d84f19.00',
-    'X-Requested-With': 'XMLHttpRequest',
-    'sec-ch-ua': '"Not_A Brand";v="99", "Google Chrome";v="109", "Chromium";v="109"',
-    'sec-ch-ua-mobile': '?0',
-    'sec-ch-ua-platform': '"Windows"',
-    'x-csrf-token': '3:1674660811:qGMz7Gr12aEevVyWCIL8x6U-mdP_:aa8b10137d6c4cfe64ebe8fa8b71bbadca530ed86eb9dd98151e341dc12b91b2',
-    'x-detected-locale': 'EUR|en-US|ES',
-    'x-recs-primary-location': 'https://www.etsy.com/search?q=cosas+nuevas',
-    'x-recs-primary-referrer': 'https://www.etsy.com/',
-}
+def get_headers(token):
+    headers = {
+        'Accept': '*/*',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Connection': 'keep-alive',
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'Origin': 'https://www.etsy.com',
+        'Referer': 'https://www.etsy.com/search?q=cosas+nuevas',
+        'Sec-Fetch-Dest': 'empty',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Site': 'same-origin',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
+        'X-Page-GUID': 'f3b1fa0b12d.97a359182b31b5d84f19.00',
+        'X-Requested-With': 'XMLHttpRequest',
+        'sec-ch-ua': '"Not_A Brand";v="99", "Google Chrome";v="109", "Chromium";v="109"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'x-csrf-token': token,
+        'x-detected-locale': 'EUR|en-US|ES',
+        'x-recs-primary-location': 'https://www.etsy.com/search?q=cosas+nuevas',
+        'x-recs-primary-referrer': 'https://www.etsy.com/',
+    }
+    return headers
+
+
+def get_csrf_token(response1):
+    token = False
+    soup = BeautifulSoup(response1.text, 'html.parser')
+    for res in soup.find_all("meta", {"name": "csrf_nonce"}):
+        token = True
+        csrf_coken = res['content']
+    if token == False:
+        exit("No token recovered")
+    return csrf_coken
+
+
+session = requests.Session()
+session.cookies.clear()
+jar = requests.cookies.RequestsCookieJar()
+response1 = session.get('https://www.etsy.com', verify=False, cookies=jar)  # or post ...
+jar.update(response1.cookies)
+cookies = requests.utils.dict_from_cookiejar(jar)
+csrf_token = get_csrf_token(response1)
+headers = get_headers(csrf_token)
+
+# cookies = {
+#    'uaid': 'UBkKv13emHPLDr3vN74gWlX4wiRjZACC5Itu02F0tVJpYmaKkpVSsJehh0VSlre3X1pEqntGUr5piUeeWZ55YEVGvlItAwA.',
+#    'user_prefs': '0zFSLEtu3yN_RX4bKDUFii1TJYxjZACC5Itu02F0tJJraJCSTl5pTo6OUmqebmiwko6SazBUxAhC4SJiGQA.',
+#    'fve': '1674659479.0',
+#    'last_browse_page': 'https%3A%2F%2Fwww.etsy.com%2F',
+#    'ua': '531227642bc86f3b5fd7103a0c0b4fd6',
+#    'p': 'eyJnZHByX3RwIjoxLCJnZHByX3AiOjF9',
+#    'pla_spr': '0',
+#    '_gcl_au': '1.1.68641045.1674660812',
+#    '_ga': 'GA1.2.1789194991.1674660813',
+#    '_gid': 'GA1.2.1179219547.1674660813',
+#    '_uetsid': 'a07898009cc511ed829af15fbf5270b9',
+#    '_uetvid': 'a078eea09cc511ed93e61dbcefc65e6a',
+#    '_derived_epik': 'dj0yJnU9dk01TjR1YTVnT1dzRmVkWVdnMjlET2tHYndWaUNLbGkmbj1xYWhFVklmTEhQUV94WVdIdEIxNnB3Jm09MSZ0PUFBQUFBR1BSUzgwJnJtPTEmcnQ9QUFBQUFHUFJTODAmc3A9NQ',
+#    '_pin_unauth': 'dWlkPU4yUTBPR1psWTJJdE1EaGtOUzAwWlRBMkxUazJOMkl0WlRBNE1EazRNamMzTlRKbQ',
+#    '_ga_KR3J610VYM': 'GS1.1.1674660813.1.1.1674660893.60.0.0',
+#    'tsd': '%7B%22gnav_search_focus%22%3A%7B%22event_name%22%3A%22gnav_search_focus%22%2C%22interaction_type%22%3A%22keyboard%22%7D%2C%22gnav_perform_search%22%3A%7B%22event_name%22%3A%22gnav_perform_search%22%2C%22interaction_type%22%3A%22click%22%7D%7D',
+#    'search_options': '{"prev_search_term":"cosas%20nuevas","item_language":null,"language_carousel":null}',
+# }
+
 
 data = {
     'log_performance_metrics': 'true',
@@ -107,7 +131,7 @@ else:
     exit('Datos no encontrados output')
 soup = BeautifulSoup(html_text, 'html.parser')
 contador_productos = 0
-deshechados=0
+deshechados = 0
 for div in soup.find_all("li"):
     for li in div.find_all(attrs={"data-page-type": "search"}):
         for link in li.find_all('a'):
