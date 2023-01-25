@@ -131,6 +131,8 @@ class Parser:
             data=data,
             verify=False
         )
+        print(self.cookies)
+        print(self.headers)
         self.jar.update(response.cookies)
         self.cookies = requests.utils.dict_from_cookiejar(self.jar)
         jsondata = response.json()
