@@ -1,5 +1,21 @@
+import requests
+from bs4 import BeautifulSoup
+
+
 def get_cookie():
-    cookies = {
+    complete()
+    exit()
+    response = requests.get('https://www.etsy.com/', verify=False)
+    cookies = response.cookies
+    for cookie in cookies:
+        print(cookie)
+    exit()
+    cookies_jar = requests.cookies.RequestsCookieJar()
+    print(cookies_jar)
+    exit()
+    return cookies_jar
+
+    cookies2 = {
         'uaid': 'vP9eQESfBtTB4TEpXfRGqBgOE_hjZACC5CPmP2F0tVJpYmaKkpWSR1FFemRweWRkoqFftoV7RWlBfkB8Vl5VVk6xr1ItAwA.',
         'fve': '1673803769.0',
         'ua': '531227642bc86f3b5fd7103a0c0b4fd6',
@@ -26,6 +42,7 @@ def get_cookie():
     }
     return cookies
 
+
 def get_headers():
     headers = {
         'authority': 'www.etsy.com',
@@ -48,3 +65,62 @@ def get_headers():
         'x-requested-with': 'XMLHttpRequest',
     }
     return headers
+
+
+def complete():
+    jar = requests.cookies.RequestsCookieJar()
+    session = requests.Session()
+    response1 = session.get('https://www.etsy.com', verify=False, cookies=jar)  # or post ...
+    jar.update(response1.cookies)
+
+    cookies = requests.utils.dict_from_cookiejar(jar)
+    headers = session.headers
+    print(cookies)
+    print(headers)
+    soup = BeautifulSoup(response1.text, 'html.parser')
+    # parseamos la respuesta para coger el nonce
+
+
+
+
+    # cookies['ua'] = '531227642bc86f3b5fd7103a0c0b4fd6'
+    # cookies['p'] = 'eyJnZHByX3RwIjoxLCJnZHByX3AiOjF9'
+    # cookies['fve'] = '1673803769.0'
+    # cookies['uaid']='vP9eQESfBtTB4TEpXfRGqBgOE_hjZACC5CPmP2F0tVJpYmaKkpWSR1FFemRweWRkoqFftoV7RWlBfkB8Vl5VVk6xr1ItAwA.'
+
+
+    data = {
+        'log_performance_metrics': 'true',
+        'specs[async_search_results][]': 'Search2_ApiSpecs_WebSearch',
+        'specs[async_search_results][1][search_request_params][detected_locale][language]': '',
+        'specs[async_search_results][1][search_request_params][detected_locale][currency_code]': 'EUR',
+        'specs[async_search_results][1][search_request_params][detected_locale][region]': 'ES',
+        'specs[async_search_results][1][search_request_params][locale][language]': 'es',
+        'specs[async_search_results][1][search_request_params][locale][currency_code]': 'EUR',
+        'specs[async_search_results][1][search_request_params][locale][region]': 'ES',
+        'specs[async_search_results][1][search_request_params][name_map][query]': 'q',
+        'specs[async_search_results][1][search_request_params][name_map][query_type]': 'qt',
+        'specs[async_search_results][1][search_request_params][name_map][results_per_page]': 'result_count',
+        'specs[async_search_results][1][search_request_params][name_map][min_price]': 'min',
+        'specs[async_search_results][1][search_request_params][name_map][max_price]': 'max',
+        'specs[async_search_results][1][search_request_params][parameters][q]': 'pulseras',
+        'specs[async_search_results][1][search_request_params][parameters][ref]': 'pagination',
+        'specs[async_search_results][1][search_request_params][parameters][as_prefix]': '',
+        'specs[async_search_results][1][search_request_params][parameters][page]': 1,
+        'specs[async_search_results][1][search_request_params][parameters][referrer]': 'https://www.etsy.com/es/search?q=pulseras',
+        'specs[async_search_results][1][search_request_params][parameters][is_prefetch]': 'false',
+        'specs[async_search_results][1][search_request_params][parameters][placement]': 'wsg',
+        'specs[async_search_results][1][search_request_params][user_id]': '',
+        'specs[async_search_results][1][request_type]': 'reformulation',
+        'view_data_event_name': 'search_async_reformulation_specview_rendered',
+    }
+    response = requests.post(
+        'https://www.etsy.com/api/v3/ajax/bespoke/member/neu/specs/async_search_results',
+        cookies=cookies,
+        headers=headers,
+        data=data,
+        verify=False
+    )
+    jsondata = response.json()
+    print(jsondata)
+    exit()

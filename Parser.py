@@ -1,4 +1,3 @@
-import curlfunc as curlfunc
 import requests
 from bs4 import BeautifulSoup
 import sqlite3
@@ -7,16 +6,24 @@ import reviews as reviews
 import xlsxwriter
 from datetime import datetime
 
+requests.packages.urllib3.disable_warnings()
+
 
 class Parser:
     def __init__(self, keyword, country_iso_code):
+        jar = requests.cookies.RequestsCookieJar()
+        self.session = requests.Session()
+        response1 = self.session.get('https://www.etsy.com', verify=False, cookies=jar)  # or post ...
+        jar.update(response1.cookies)
+        self.cookies = requests.utils.dict_from_cookiejar(jar)
+        self.csrf_token = self.get_csrf_token(response1)
+
         self.deshechados = 0
         self.listing_ids = []
         self.logging_keys = []
         self.ad_ids = []
         self.contador_productos = 0
-        self.cookies = curlfunc.get_cookie()
-        self.headers = curlfunc.get_headers()
+        self.headers = self.get_headers()
         self.pagina = 1
         self.keyword = keyword
         self.country_iso_code = country_iso_code
@@ -33,9 +40,41 @@ class Parser:
         self.worksheet.write(0, 3, 'nº reviews past 30 days')
         self.row_number = 0
 
+    def get_csrf_token(self, response1):
+        token = False
+        soup = BeautifulSoup(response1.text, 'html.parser')
+        for res in soup.find_all("meta", {"name": "csrf_nonce"}):
+            token = True
+            csrf_coken = res['content']
+        if token == False:
+            exit("No token recovered")
+        return csrf_coken
+
     def create_db_name(self):
         name_ini = self.keyword.replace(" ", "_") + "_" + self.country_iso_code
         return name_ini
+
+    def get_headers(self):
+        headers = {
+            'authority': 'www.etsy.com',
+            'accept': '*/*',
+            'accept-language': 'es-ES,es;q=0.9,en;q=0.8',
+            'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'origin': 'https://www.etsy.com',
+            'referer': 'https://www.etsy.com',
+            'sec-ch-ua': '"Not_A Brand";v="99", "Google Chrome";v="109", "Chromium";v="109"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': '"Windows"',
+            'sec-fetch-dest': 'empty',
+            'sec-fetch-mode': 'cors',
+            'sec-fetch-site': 'same-origin',
+            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
+            'x-csrf-token': self.csrf_token,
+            'x-recs-primary-location': 'https://www.etsy.com/',
+            'x-recs-primary-referrer': 'https://www.etsy.com/',
+            'x-requested-with': 'XMLHttpRequest',
+        }
+        return headers
 
     # def create_data_table(self):
     #     sql_create_data_table = """CREATE TABLE IF NOT EXISTS data (
@@ -83,7 +122,7 @@ class Parser:
     #         exit(e)
 
     def request_item(self, url):
-        response = requests.get(url, verify=False)
+        response = self.session.get(url, verify=False)
         return response
 
     def pasar_pagina(self):
@@ -120,7 +159,7 @@ class Parser:
             'specs[async_search_results][1][request_type]': 'reformulation',
             'view_data_event_name': 'search_async_reformulation_specview_rendered',
         }
-        response = requests.post(
+        response = self.session.post(
             'https://www.etsy.com/api/v3/ajax/bespoke/member/neu/specs/async_search_results',
             cookies=self.cookies,
             headers=self.headers,
@@ -128,6 +167,7 @@ class Parser:
             verify=False
         )
         jsondata = response.json()
+
         # OBTENEMOS LOS LAZY LOADED LISTING IDS Y LOS LAZY LOADED AD IDS y lazy_loaded_logging_keys
         if 'jsData' in jsondata:
             if 'lazy_loaded_listing_ids' in jsondata['jsData']:
@@ -169,8 +209,10 @@ class Parser:
                         self.contador_productos = self.contador_productos + 1
                         item_resp = self.request_item(enlace)
                         itemsoup = BeautifulSoup(item_resp.text, 'html.parser')
+
                         if len(itemsoup.find_all("span", {"class": "wt-badge wt-badge--status-02 wt-ml-xs-2"})) > 0:
-                            rev = reviews.reviews(data_shop_id, data_listing_id)
+                            print("Entramos a por reviews de " + str(enlace))
+                            rev = reviews.reviews(data_shop_id, data_listing_id, self.cookies, self.headers, self.session)
                             reviews_totales = rev.get_reviews_que_cumple()
                             reviews_totales_quince = rev.contador_reviews_quince
                         else:
@@ -181,7 +223,7 @@ class Parser:
                         a_insertar.append(dictio)
         if len(a_insertar) > 0:
             self.insert_db_data(a_insertar)
-        # print("Productos:" + str(self.contador_productos) + " en la pagina " + str(self.pagina))
+        print("Productos:" + str(self.contador_productos) + " en la pagina " + str(self.pagina))
         return response
 
     def segunda_peticion(self):
@@ -189,8 +231,6 @@ class Parser:
         if len(self.listing_ids) == 0:
             print("Listing ids vacio")
             return 0
-        cookies = curlfunc.get_cookie()
-        headers = curlfunc.get_headers()
 
         data = {
             'log_performance_metrics': 'true',
@@ -264,8 +304,8 @@ class Parser:
             data['specs[listingCards][1][logging_keys][]'] = self.logging_keys
         response = requests.post(
             'https://www.etsy.com/api/v3/ajax/bespoke/member/neu/specs/listingCards',
-            cookies=cookies,
-            headers=headers,
+            cookies=self.cookies,
+            headers=self.headers,
             data=data,
             verify=False
         )
@@ -294,7 +334,8 @@ class Parser:
                         item_resp = self.request_item(enlace)
                         itemsoup = BeautifulSoup(item_resp.text, 'html.parser')
                         if len(itemsoup.find_all("span", {"class": "wt-badge wt-badge--status-02 wt-ml-xs-2"})) > 0:
-                            rev = reviews.reviews(data_shop_id, data_listing_id)
+                            rev = reviews.reviews(data_shop_id, data_listing_id, self.cookies, self.headers,
+                                                  self.session)
                             reviews_totales = rev.get_reviews_que_cumple()
                             reviews_totales_quince = rev.contador_reviews_quince
                         else:
@@ -305,4 +346,4 @@ class Parser:
                         a_insertar.append(dictio)
         if len(a_insertar) > 0:
             self.insert_db_data(a_insertar)
-        # print("Articulos2: " + str(self.contador_productos) + " en la pagina " + str(self.pagina))
+        print("Articulos2: " + str(self.contador_productos) + " en la pagina " + str(self.pagina))
