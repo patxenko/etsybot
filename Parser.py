@@ -30,7 +30,7 @@ class Parser:
 
         # Primero creamos el fichero
         self.excel_name = self.dbname + datetime.now().strftime("%Y_%m_%d") + '.xlsx'
-        print("The file is : "+'\033[92m'+str(self.excel_name) + '\033[96m')
+        print("The file is : "+'\033[92m'+str(self.excel_name) + '\033[39m')
         wb = openpyxl.Workbook()
         ws = wb.active
         mylist = ['titulo del producto', 'URL', 'nº reviews past 15 days', 'nº reviews past 30 days']
@@ -105,7 +105,7 @@ class Parser:
             'specs[async_search_results][1][search_request_params][detected_locale][language]': '',
             'specs[async_search_results][1][search_request_params][detected_locale][currency_code]': 'EUR',
             'specs[async_search_results][1][search_request_params][detected_locale][region]': self.country_iso_code,
-            'specs[async_search_results][1][search_request_params][locale][language]': 'es',
+            'specs[async_search_results][1][search_request_params][locale][language]': '',
             'specs[async_search_results][1][search_request_params][locale][currency_code]': 'EUR',
             'specs[async_search_results][1][search_request_params][locale][region]': self.country_iso_code,
             'specs[async_search_results][1][search_request_params][name_map][query]': 'q',
@@ -201,10 +201,10 @@ class Parser:
         data = {
             'log_performance_metrics': 'true',
             'specs[listingCards][]': 'Search2_ApiSpecs_LazyListingCards',
-            'specs[listingCards][1][search_request_params][detected_locale][language]': 'es',
+            'specs[listingCards][1][search_request_params][detected_locale][language]': '',
             'specs[listingCards][1][search_request_params][detected_locale][currency_code]': 'EUR',
             'specs[listingCards][1][search_request_params][detected_locale][region]': self.country_iso_code,
-            'specs[listingCards][1][search_request_params][locale][language]': 'es',
+            'specs[listingCards][1][search_request_params][locale][language]': '',
             'specs[listingCards][1][search_request_params][locale][currency_code]': 'EUR',
             'specs[listingCards][1][search_request_params][locale][region]': self.country_iso_code,
             'specs[listingCards][1][search_request_params][name_map][query]': self.keyword,
@@ -229,7 +229,7 @@ class Parser:
             'specs[listingCards][1][search_request_params][parameters][eligibility_map][favorited]': '',
             'specs[listingCards][1][search_request_params][parameters][eligibility_map][first_visit]': '',
             'specs[listingCards][1][search_request_params][parameters][eligibility_map][http_referrer]': '',
-            'specs[listingCards][1][search_request_params][parameters][eligibility_map][language]': 'es',
+            'specs[listingCards][1][search_request_params][parameters][eligibility_map][language]': '',
             'specs[listingCards][1][search_request_params][parameters][eligibility_map][last_login]': '',
             'specs[listingCards][1][search_request_params][parameters][eligibility_map][purchases_awaiting_review]': '',
             'specs[listingCards][1][search_request_params][parameters][eligibility_map][push_notification_settings]': '',
