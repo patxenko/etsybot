@@ -4,6 +4,9 @@ import reviews as reviews
 import openpyxl
 import Copy_excel as ce
 from datetime import datetime
+import urllib.parse
+
+
 
 requests.packages.urllib3.disable_warnings()
 
@@ -118,22 +121,21 @@ class Parser:
         data = {
             'log_performance_metrics': 'true',
             'specs[async_search_results][]': 'Search2_ApiSpecs_WebSearch',
-            'specs[async_search_results][1][search_request_params][detected_locale][language]': '',
+            'specs[async_search_results][1][search_request_params][detected_locale][language]': 'en-US',
             'specs[async_search_results][1][search_request_params][detected_locale][currency_code]': 'EUR',
-            'specs[async_search_results][1][search_request_params][detected_locale][region]': self.country_iso_code,
-            'specs[async_search_results][1][search_request_params][locale][language]': '',
+            'specs[async_search_results][1][search_request_params][detected_locale][region]': 'ES',
+            'specs[async_search_results][1][search_request_params][locale][language]': 'es',
             'specs[async_search_results][1][search_request_params][locale][currency_code]': 'EUR',
-            'specs[async_search_results][1][search_request_params][locale][region]': self.country_iso_code,
+            'specs[async_search_results][1][search_request_params][locale][region]': 'ES',
             'specs[async_search_results][1][search_request_params][name_map][query]': 'q',
             'specs[async_search_results][1][search_request_params][name_map][query_type]': 'qt',
             'specs[async_search_results][1][search_request_params][name_map][results_per_page]': 'result_count',
             'specs[async_search_results][1][search_request_params][name_map][min_price]': 'min',
             'specs[async_search_results][1][search_request_params][name_map][max_price]': 'max',
             'specs[async_search_results][1][search_request_params][parameters][q]': self.keyword,
-            'specs[async_search_results][1][search_request_params][parameters][ref]': 'pagination',
-            'specs[async_search_results][1][search_request_params][parameters][as_prefix]': '',
-            'specs[async_search_results][1][search_request_params][parameters][page]': self.pagina,
-            'specs[async_search_results][1][search_request_params][parameters][referrer]': 'https://www.etsy.com/search?q=' + self.keyword,
+            'specs[async_search_results][1][search_request_params][parameter][page]': self.pagina,
+            'specs[async_search_results][1][search_request_params][parameters][referrer]': 'https://www.etsy.com/es/search?q='+urllib.parse.quote(self.keyword),
+            'specs[async_search_results][1][search_request_params][parameters][ref]': '',
             'specs[async_search_results][1][search_request_params][parameters][is_prefetch]': 'false',
             'specs[async_search_results][1][search_request_params][parameters][placement]': 'wsg',
             'specs[async_search_results][1][search_request_params][user_id]': '',
