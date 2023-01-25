@@ -10,11 +10,11 @@ requests.packages.urllib3.disable_warnings()
 
 class Parser:
     def __init__(self, keyword, country_iso_code):
-        jar = requests.cookies.RequestsCookieJar()
+        self.jar = requests.cookies.RequestsCookieJar()
         self.session = requests.Session()
-        response1 = self.session.get('https://www.etsy.com', verify=False, cookies=jar)  # or post ...
-        jar.update(response1.cookies)
-        self.cookies = requests.utils.dict_from_cookiejar(jar)
+        response1 = self.session.get('https://www.etsy.com', verify=False, cookies=self.jar)  # or post ...
+        self.jar.update(response1.cookies)
+        self.cookies = requests.utils.dict_from_cookiejar(self.jar)
         self.csrf_token = self.get_csrf_token(response1)
 
         self.deshechados = 0
@@ -131,6 +131,8 @@ class Parser:
             data=data,
             verify=False
         )
+        self.jar.update(response.cookies)
+        self.cookies = requests.utils.dict_from_cookiejar(self.jar)
         jsondata = response.json()
 
         # OBTENEMOS LOS LAZY LOADED LISTING IDS Y LOS LAZY LOADED AD IDS y lazy_loaded_logging_keys
@@ -275,6 +277,8 @@ class Parser:
             data=data,
             verify=False
         )
+        self.jar.update(response.cookies)
+        self.cookies = requests.utils.dict_from_cookiejar(self.jar)
         jsondata = response.json()
         if 'output' in jsondata:
             if 'listingCards' in jsondata['output']:
