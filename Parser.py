@@ -71,7 +71,7 @@ class Parser:
         headers = {
             'authority': 'www.etsy.com',
             'accept': '*/*',
-            'accept-language': 'es-ES,es;q=0.9,en;q=0.8',
+            'accept-language': 'en-US,en;q=0.9',
             'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
             'origin': 'https://www.etsy.com',
             'referer': 'https://www.etsy.com',
@@ -114,7 +114,7 @@ class Parser:
         self.logging_keys = []
         self.ad_ids = []
         print(self.session.cookies)
-        print(self.session.headers)
+        print(self.headers)
         data = {
             'log_performance_metrics': 'true',
             'specs[async_search_results][]': 'Search2_ApiSpecs_WebSearch',
