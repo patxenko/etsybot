@@ -30,6 +30,7 @@ class Parser:
 
         # Primero creamos el fichero
         self.excel_name = self.dbname + datetime.now().strftime("%Y_%m_%d") + '.xlsx'
+        print("The file is : "+'\033[92m'+str(self.excel_name) + '\033[96m')
         wb = openpyxl.Workbook()
         ws = wb.active
         mylist = ['titulo del producto', 'URL', 'nº reviews past 15 days', 'nº reviews past 30 days']
@@ -116,7 +117,7 @@ class Parser:
             'specs[async_search_results][1][search_request_params][parameters][ref]': 'pagination',
             'specs[async_search_results][1][search_request_params][parameters][as_prefix]': '',
             'specs[async_search_results][1][search_request_params][parameters][page]': self.pagina,
-            'specs[async_search_results][1][search_request_params][parameters][referrer]': 'https://www.etsy.com/es/search?q=' + self.keyword,
+            'specs[async_search_results][1][search_request_params][parameters][referrer]': 'https://www.etsy.com/search?q=' + self.keyword,
             'specs[async_search_results][1][search_request_params][parameters][is_prefetch]': 'false',
             'specs[async_search_results][1][search_request_params][parameters][placement]': 'wsg',
             'specs[async_search_results][1][search_request_params][user_id]': '',
@@ -214,7 +215,7 @@ class Parser:
             'specs[listingCards][1][search_request_params][parameters][q]': self.keyword,
             'specs[listingCards][1][search_request_params][parameters][ref]': 'auto-1',
             'specs[listingCards][1][search_request_params][parameters][page]': self.pagina,
-            'specs[listingCards][1][search_request_params][parameters][referrer]': 'https://www.etsy.com/es/search?q=' + self.keyword + '&ref=auto-1&as_prefix=',
+            'specs[listingCards][1][search_request_params][parameters][referrer]': 'https://www.etsy.com/search?q=' + self.keyword + '&ref=auto-1&as_prefix=',
             'specs[listingCards][1][search_request_params][parameters][is_prefetch]': 'false',
             'specs[listingCards][1][search_request_params][parameters][placement]': 'wsg',
             'specs[listingCards][1][search_request_params][parameters][page_type]': 'search',

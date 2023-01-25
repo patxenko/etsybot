@@ -1,18 +1,8 @@
-import time
-import openpyxl
-import Copy_excel as ce
+import requests
 
-
-# primero creamos
-filepath = "poc.xlsx"
-wb = openpyxl.Workbook()
-wb.save(filepath)
-
-excel = ce.Copy_excel('poc.xlsx','poc.xlsx')
-while (1==1):
-    arr = ['cs','csadca','asd','asdfasf']
-    excel.ws.append(arr)
-    excel.save_excel()
-    time.sleep(4)
-
-
+jar = requests.cookies.RequestsCookieJar()
+session = requests.Session()
+response1 = session.get('https://www.etsy.com', verify=False, cookies=jar)  # or post ...
+jar.update(response1.cookies)
+cookies = requests.utils.dict_from_cookiejar(jar)
+print(response1.headers)
