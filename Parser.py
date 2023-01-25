@@ -15,6 +15,7 @@ class Parser:
     def __init__(self, keyword, country_iso_code):
         self.jar = requests.cookies.RequestsCookieJar()
         self.session = requests.Session()
+        self.session.cookies.clear()
         response1 = self.session.get('https://www.etsy.com', verify=False, cookies=self.jar)  # or post ...
         self.jar.update(response1.cookies)
         self.cookies = requests.utils.dict_from_cookiejar(self.jar)
@@ -116,17 +117,16 @@ class Parser:
         self.listing_ids = []
         self.logging_keys = []
         self.ad_ids = []
-        print(self.session.cookies)
-        print(self.headers)
+
         data = {
             'log_performance_metrics': 'true',
             'specs[async_search_results][]': 'Search2_ApiSpecs_WebSearch',
             'specs[async_search_results][1][search_request_params][detected_locale][language]': 'en-US',
             'specs[async_search_results][1][search_request_params][detected_locale][currency_code]': 'EUR',
-            'specs[async_search_results][1][search_request_params][detected_locale][region]': 'ES',
-            'specs[async_search_results][1][search_request_params][locale][language]': 'es',
+            'specs[async_search_results][1][search_request_params][detected_locale][region]': '',
+            'specs[async_search_results][1][search_request_params][locale][language]': '',
             'specs[async_search_results][1][search_request_params][locale][currency_code]': 'EUR',
-            'specs[async_search_results][1][search_request_params][locale][region]': 'ES',
+            'specs[async_search_results][1][search_request_params][locale][region]': '',
             'specs[async_search_results][1][search_request_params][name_map][query]': 'q',
             'specs[async_search_results][1][search_request_params][name_map][query_type]': 'qt',
             'specs[async_search_results][1][search_request_params][name_map][results_per_page]': 'result_count',
