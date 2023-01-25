@@ -211,7 +211,7 @@ class Parser:
                         itemsoup = BeautifulSoup(item_resp.text, 'html.parser')
 
                         if len(itemsoup.find_all("span", {"class": "wt-badge wt-badge--status-02 wt-ml-xs-2"})) > 0:
-                            print("Entramos a por reviews de " + str(enlace))
+                            # print("Entramos a por reviews de " + str(enlace))
                             rev = reviews.reviews(data_shop_id, data_listing_id, self.cookies, self.headers, self.session)
                             reviews_totales = rev.get_reviews_que_cumple()
                             reviews_totales_quince = rev.contador_reviews_quince

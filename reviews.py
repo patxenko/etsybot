@@ -27,7 +27,7 @@ class reviews:
             'oct': 10,
             'nov': 11,
             'dec': 12
-    }
+        }
 
         ahora = datetime.datetime.utcnow()
         self.haceunmes = ahora - datetime.timedelta(days=31)
@@ -38,7 +38,6 @@ class reviews:
         self.headers = headers
 
     def get_reviews(self):
-        print("recogemos reviews")
         data = {
             'log_performance_metrics': 'false',
             'specs[reviews][]': 'Etsy\\Modules\\ListingPage\\Reviews\\ApiSpec',
@@ -76,17 +75,16 @@ class reviews:
         soup_r = BeautifulSoup(html_text_reviews, 'html.parser')
         if len(soup_r.find_all('p', class_='wt-text-caption wt-text-gray')) == 0:
             return 0
-        print("Parseamos reviews")
         for fechita in soup_r.find_all('p', class_='wt-text-caption wt-text-gray'):
             fech = (fechita.get_text().strip()).split()
             anyo = fech[len(fech) - 1]
-            mes = fech[len(fech) - 2]
-            dia = fech[len(fech) - 3]
-            print("El resultado es este: " + str(fech))
+            mes = fech[len(fech) - 3].replace(",", '').lower()
+            dia = fech[len(fech) - 2].replace(",", '')
+            # print("El resultado es este: " + str(fech))
             if anyo.isnumeric() is False or dia.isnumeric() is False:
                 continue
-            fechaRecogida = datetime.datetime(int(anyo), int(self.list_months[mes]), int(dia))
-            print("La fecha recogida es " + str(fechaRecogida))
+            fechaRecogida = datetime.datetime(int(anyo), int(self.list_months2[mes]), int(dia))
+            # print("La fecha recogida es " + str(fechaRecogida))
             if fechaRecogida > self.hacequince:
                 self.contador_reviews_quince = self.contador_reviews_quince + 1
             if fechaRecogida > self.haceunmes:
@@ -95,7 +93,6 @@ class reviews:
                 return 0
         if len(soup_r.find_all('p', class_='wt-text-caption wt-text-gray')) == 0:
             return 0
-        print("fin parseo reviews")
         return 1
 
     def pasa_pagina(self):
@@ -104,7 +101,6 @@ class reviews:
     def get_reviews_que_cumple(self):
         res = 1
         while res == 1:
-            print("estamos aqui")
             res = self.get_reviews()
             if res == 0:
                 break
