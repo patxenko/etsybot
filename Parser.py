@@ -113,6 +113,8 @@ class Parser:
         self.listing_ids = []
         self.logging_keys = []
         self.ad_ids = []
+        print(self.session.cookies)
+        print(self.session.headers)
         data = {
             'log_performance_metrics': 'true',
             'specs[async_search_results][]': 'Search2_ApiSpecs_WebSearch',
