@@ -2,7 +2,6 @@ import requests
 import time
 import Parser as Parser
 import sys, getopt
-import download as download
 
 requests.packages.urllib3.disable_warnings()
 
@@ -50,7 +49,6 @@ def main(argv):
 
     fin = time.time()
     print("Generando fichero .xlsx")
-    download.downloadfile(dr.dbname)
     print("Tiempo de ejecucion: " + str(fin - inicio))
 
 

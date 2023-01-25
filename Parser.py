@@ -1,9 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
-import sqlite3
-from sqlite3 import Error
 import reviews as reviews
-import xlsxwriter
+import openpyxl
+import Copy_excel as ce
 from datetime import datetime
 
 requests.packages.urllib3.disable_warnings()
@@ -28,17 +27,16 @@ class Parser:
         self.keyword = keyword
         self.country_iso_code = country_iso_code
         self.dbname = self.create_db_name()
-        # self.connection = self.create_connection()
-        self.workbook = xlsxwriter.Workbook(self.dbname + datetime.now().strftime("%Y %m %d") + '.xlsx')  # Create file
-        try:
-            self.worksheet = self.workbook.add_worksheet(name='data')  # Sheet names in excel can have up to 31 chars
-        except Exception as e:
-            exit(str(e))
-        self.worksheet.write(0, 0, 'titulo del producto')
-        self.worksheet.write(0, 1, 'URL')
-        self.worksheet.write(0, 2, 'nº reviews past 15 days')
-        self.worksheet.write(0, 3, 'nº reviews past 30 days')
+
+        # Primero creamos el fichero
+        self.excel_name = self.dbname + datetime.now().strftime("%Y_%m_%d") + '.xlsx'
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        mylist = ['titulo del producto', 'URL', 'nº reviews past 15 days', 'nº reviews past 30 days']
+        ws.append(mylist)
+        wb.save(self.excel_name)
         self.row_number = 0
+        self.excel = ce.Copy_excel(self.excel_name, self.excel_name)
 
     def get_csrf_token(self, response1):
         token = False
@@ -76,50 +74,16 @@ class Parser:
         }
         return headers
 
-    # def create_data_table(self):
-    #     sql_create_data_table = """CREATE TABLE IF NOT EXISTS data (
-    #                                         name text NOT NULL,
-    #                                         url text NOT NULL,
-    #                                         last15 integer NOT NULL,
-    #                                         last30 integer NOT NULL,
-    #                                         UNIQUE(name,url)
-    #                                     );"""
-    #     try:
-    #         c = self.connection.cursor()
-    #         c.execute(sql_create_data_table)
-    #     except Error as e:
-    #         exit(e)
-
     def insert_db_data(self, a_insertar):
         for a in a_insertar:
-            self.row_number = self.row_number + 1
             try:
                 if '?' in a['url']:
                     url = a['url'].split('?')[0]
                 task = (a['title'], url, a['last15'], a['last30'])
-                self.worksheet.write(self.row_number, 0, a['title'])
-                self.worksheet.write(self.row_number, 1, url)
-                self.worksheet.write(self.row_number, 2, a['last15'])
-                self.worksheet.write(self.row_number, 3, a['last30'])
-                # sql = ''' INSERT INTO data(name,url,last15,last30)
-                #                       VALUES(?,?,?,?) '''
-                # cur = self.connection.cursor()
-                # cur.execute(sql, task)
-                # self.connection.commit()
+                self.excel.ws.append(task)
+                self.excel.save_excel()
             except Exception as e:
                 exit(e)
-                # if 'UNIQUE constraint' in str(e):
-                #     return
-                # else:
-                #     exit(e)
-
-    # def create_connection(self):
-    #     try:
-    #         conn = sqlite3.connect(self.dbname)
-    #         # print(sqlite3.version)
-    #         return conn
-    #     except Error as e:
-    #         exit(e)
 
     def request_item(self, url):
         response = self.session.get(url, verify=False)
@@ -212,7 +176,8 @@ class Parser:
 
                         if len(itemsoup.find_all("span", {"class": "wt-badge wt-badge--status-02 wt-ml-xs-2"})) > 0:
                             # print("Entramos a por reviews de " + str(enlace))
-                            rev = reviews.reviews(data_shop_id, data_listing_id, self.cookies, self.headers, self.session)
+                            rev = reviews.reviews(data_shop_id, data_listing_id, self.cookies, self.headers,
+                                                  self.session)
                             reviews_totales = rev.get_reviews_que_cumple()
                             reviews_totales_quince = rev.contador_reviews_quince
                         else:

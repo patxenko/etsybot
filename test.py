@@ -1,10 +1,18 @@
-import datetime
+import time
+import openpyxl
+import Copy_excel as ce
 
-month_name = 'Jan'
 
-month_num = datetime.datetime.strptime(month_name, '%b').month
+# primero creamos
+filepath = "poc.xlsx"
+wb = openpyxl.Workbook()
+wb.save(filepath)
 
-print(month_num, type(month_num))
+excel = ce.Copy_excel('poc.xlsx','poc.xlsx')
+while (1==1):
+    arr = ['cs','csadca','asd','asdfasf']
+    excel.ws.append(arr)
+    excel.save_excel()
+    time.sleep(4)
 
-#fechaRecogida = datetime.datetime(int(2023), 'Jan', int(12))
 
