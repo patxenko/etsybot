@@ -95,7 +95,7 @@ data = {
     'view_data_event_name': 'search_async_reformulation_specview_rendered',
 }
 
-response = requests.post(
+response = session.post(
     'https://www.etsy.com/api/v3/ajax/bespoke/member/neu/specs/async_search_results?__a=1',
     cookies=cookies,
     headers=headers,
