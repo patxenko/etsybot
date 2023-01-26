@@ -46,6 +46,7 @@ jar = requests.cookies.RequestsCookieJar()
 response1 = session.get('https://www.etsy.com', verify=False, cookies=jar)  # or post ...
 jar.update(response1.cookies)
 
+
 cookies = requests.utils.dict_from_cookiejar(jar)
 csrf_token = get_csrf_token(response1)
 headers = get_headers(csrf_token)
@@ -98,13 +99,13 @@ data = {
 
 response = requests.post(
     'https://www.etsy.com/api/v3/ajax/bespoke/member/neu/specs/async_search_results?__a=1',
-    cookies=cookies,
+    cookies=jar,
     headers=headers,
     data=data,
     verify=False,
     timeout=10,
     allow_redirects=True,
-    proxies = { "http" : "http://185.238.228.88"}
+    # proxies = { "http" : "http://185.238.228.88"}
 )
 print(session.headers)
 print(session.cookies)
