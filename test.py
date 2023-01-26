@@ -1,6 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
 
+requests.packages.urllib3.disable_warnings()
+
+
 cookies = {
     'uaid': 'oF8m2vz_DE0OOjUPt1mt_R4UzqljZACC5Evmz2F0tVJpYmaKkpVSVlhoflGQq3uWcZGZrlGWb2aKc5BPYn52Rn5isFItAwA.',
     'user_prefs': 'VxXHLGtl-lsLhgOHomotwhYj2bpjZACC5Evmz2F0tJJraJCSTl5pTo6OUmqebmiwko6SazBUxAhC4SJiGQA.',

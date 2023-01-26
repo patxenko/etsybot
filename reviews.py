@@ -6,8 +6,7 @@ requests.packages.urllib3.disable_warnings()
 
 
 class reviews:
-    def __init__(self, data_shop_id, data_listing_id, cookies, headers, session):
-        self.session = session
+    def __init__(self, data_shop_id, data_listing_id, cookies, headers):
         self.data_shop_id = data_shop_id
         self.data_listing_id = data_listing_id
         self.pagina_reviews = 1
@@ -55,7 +54,7 @@ class reviews:
             'specs[reviews][1][filter_rating]': '0',
             'specs[reviews][1][sort_option]': 'Recency',
         }
-        response_reviews = self.session.post(
+        response_reviews = requests.post(
             'https://www.etsy.com/api/v3/ajax/bespoke/member/neu/specs/reviews',
             cookies=self.cookies,
             headers=self.headers,
