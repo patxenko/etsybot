@@ -16,7 +16,7 @@ def get_headers(token):
         'Sec-Fetch-Mode': 'cors',
         'Sec-Fetch-Site': 'same-origin',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
-        'X-Page-GUID': 'f3b1fa0b12d.97a359182b31b5d84f19.00',
+        'X-Page-GUID': '',
         'X-Requested-With': 'XMLHttpRequest',
         'sec-ch-ua': '"Not_A Brand";v="99", "Google Chrome";v="109", "Chromium";v="109"',
         'sec-ch-ua-mobile': '?0',
@@ -45,11 +45,10 @@ session.cookies.clear()
 jar = requests.cookies.RequestsCookieJar()
 response1 = session.get('https://www.etsy.com', verify=False, cookies=jar)  # or post ...
 jar.update(response1.cookies)
+
 cookies = requests.utils.dict_from_cookiejar(jar)
 csrf_token = get_csrf_token(response1)
 headers = get_headers(csrf_token)
-print(session.cookies)
-print(session.headers)
 
 # cookies = {
 #    'uaid': 'UBkKv13emHPLDr3vN74gWlX4wiRjZACC5Itu02F0tVJpYmaKkpVSsJehh0VSlre3X1pEqntGUr5piUeeWZ55YEVGvlItAwA.',
@@ -104,7 +103,7 @@ response = session.post(
     data=data,
     verify=False
 )
-
+print(response)
 jsondata = response.json()
 
 # OBTENEMOS LOS LAZY LOADED LISTING IDS Y LOS LAZY LOADED AD IDS y lazy_loaded_logging_keys
