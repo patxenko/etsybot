@@ -96,14 +96,15 @@ data = {
     'view_data_event_name': 'search_async_reformulation_specview_rendered',
 }
 
-response = session.post(
+response = requests.post(
     'https://www.etsy.com/api/v3/ajax/bespoke/member/neu/specs/async_search_results?__a=1',
     cookies=cookies,
     headers=headers,
     data=data,
     verify=False
 )
-print(response)
+print(session.headers)
+print(session.cookies)
 jsondata = response.json()
 
 # OBTENEMOS LOS LAZY LOADED LISTING IDS Y LOS LAZY LOADED AD IDS y lazy_loaded_logging_keys
