@@ -101,7 +101,10 @@ response = requests.post(
     cookies=cookies,
     headers=headers,
     data=data,
-    verify=False
+    verify=False,
+    timeout=10,
+    allow_redirects=True,
+    proxies = { "http" : "http://185.238.228.88"}
 )
 print(session.headers)
 print(session.cookies)
