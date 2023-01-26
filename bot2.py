@@ -48,6 +48,8 @@ jar.update(response1.cookies)
 cookies = requests.utils.dict_from_cookiejar(jar)
 csrf_token = get_csrf_token(response1)
 headers = get_headers(csrf_token)
+print(cookies)
+print(headers)
 
 # cookies = {
 #    'uaid': 'UBkKv13emHPLDr3vN74gWlX4wiRjZACC5Itu02F0tVJpYmaKkpVSsJehh0VSlre3X1pEqntGUr5piUeeWZ55YEVGvlItAwA.',
