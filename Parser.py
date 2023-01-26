@@ -13,6 +13,7 @@ class Parser:
     def __init__(self, keyword, country_iso_code):
         self.jar = requests.cookies.RequestsCookieJar()
         self.session = requests.Session()
+        self.organic_count = 0
         self.session.cookies.clear()
         response1 = self.session.get('https://www.etsy.com', verify=False, cookies=self.jar)  # or post ...
         self.jar.update(response1.cookies)
@@ -20,7 +21,6 @@ class Parser:
 
         self.csrf_token = self.get_csrf_token(response1)
         self.headers = self.get_headers()
-
 
         # response = self.session.post(
         #     'https://www.etsy.com/api/v3/ajax/bespoke/member/user-preferences/gdpr',
@@ -100,13 +100,21 @@ class Parser:
                 exit(e)
 
     def request_item(self, url):
-        response = requests.get(url, verify=False)
+        response = self.session.get(url, verify=False)
         return response
 
     def pasar_pagina(self):
         self.pagina = self.pagina + 1
 
     def primera_peticion(self):
+        if self.pagina > 1:
+            anterior = self.pagina - 1
+            urlfinalref = 'https://www.etsy.com/search?q=' + urllib.parse.quote(
+                self.keyword) + "&explicit=1&ship_to=" + str(self.country_iso_code) + "&ref=pagination&page=" + str(
+                anterior)
+        else:
+            urlfinalref = 'https://www.etsy.com/search?q=' + urllib.parse.quote(
+                self.keyword) + "&explicit=1&ship_to=" + str(self.country_iso_code)
         print("Primera peticion para la pagina " + str(self.pagina))
         a_insertar = []
         self.listing_ids = []
@@ -118,41 +126,46 @@ class Parser:
             'specs[async_search_results][]': 'Search2_ApiSpecs_WebSearch',
             'specs[async_search_results][1][search_request_params][detected_locale][language]': 'en-US',
             'specs[async_search_results][1][search_request_params][detected_locale][currency_code]': 'EUR',
-            'specs[async_search_results][1][search_request_params][detected_locale][region]': '',
-            'specs[async_search_results][1][search_request_params][locale][language]': '',
+            'specs[async_search_results][1][search_request_params][detected_locale][region]': 'ES',
+            'specs[async_search_results][1][search_request_params][locale][language]': 'en-US',
             'specs[async_search_results][1][search_request_params][locale][currency_code]': 'EUR',
-            'specs[async_search_results][1][search_request_params][locale][region]': '',
+            'specs[async_search_results][1][search_request_params][locale][region]': 'ES',
             'specs[async_search_results][1][search_request_params][name_map][query]': 'q',
-            'specs[async_search_results][1][search_request_params][parameters][explicit]': '1',
-            'specs[async_search_results][1][search_request_params][parameters][ship_to]': self.country_iso_code,
             'specs[async_search_results][1][search_request_params][name_map][query_type]': 'qt',
             'specs[async_search_results][1][search_request_params][name_map][results_per_page]': 'result_count',
             'specs[async_search_results][1][search_request_params][name_map][min_price]': 'min',
             'specs[async_search_results][1][search_request_params][name_map][max_price]': 'max',
             'specs[async_search_results][1][search_request_params][parameters][q]': self.keyword,
-            'specs[async_search_results][1][search_request_params][parameter][page]': str(self.pagina),
-            'specs[async_search_results][1][search_request_params][parameters][referrer]': 'https://www.etsy.com/es/search?q=' + urllib.parse.quote(
-                self.keyword),
+            'specs[async_search_results][1][search_request_params][parameters][explicit]': '1',
+            'specs[async_search_results][1][search_request_params][parameters][ship_to]': self.country_iso_code,
+            'specs[async_search_results][1][search_request_params][parameters][page]': self.pagina,
             'specs[async_search_results][1][search_request_params][parameters][ref]': 'pagination',
+            'specs[async_search_results][1][search_request_params][parameters][referrer]': urlfinalref,
             'specs[async_search_results][1][search_request_params][parameters][is_prefetch]': 'false',
             'specs[async_search_results][1][search_request_params][parameters][placement]': 'wsg',
             'specs[async_search_results][1][search_request_params][user_id]': '',
-            'specs[async_search_results][1][request_type]': 'filters',
-            'view_data_event_name': 'search_async_reformulation_specview_rendered',
+            'specs[async_search_results][1][request_type]': 'pagination_preact',
+            'view_data_event_name': 'search_async_pagination_specview_rendered',
         }
-        response = requests.post(
+        response = self.session.post(
             'https://www.etsy.com/api/v3/ajax/bespoke/member/neu/specs/async_search_results',
             cookies=self.cookies,
             headers=self.headers,
             data=data,
             verify=False
         )
+
         self.jar.update(response.cookies)
         self.cookies = requests.utils.dict_from_cookiejar(self.jar)
         jsondata = response.json()
+        # print(jsondata['jsData']['search_request_params']['parameters'])
 
         # OBTENEMOS LOS LAZY LOADED LISTING IDS Y LOS LAZY LOADED AD IDS y lazy_loaded_logging_keys
         if 'jsData' in jsondata:
+            if 'organic_listings_count' in jsondata['jsData']:
+                self.organic_count = jsondata['jsData']['organic_listings_count']
+            else:
+                print('Datos no encontrados de organic_listings_count')
             if 'lazy_loaded_listing_ids' in jsondata['jsData']:
                 self.listing_ids = jsondata['jsData']['lazy_loaded_listing_ids']
             else:
@@ -210,6 +223,14 @@ class Parser:
         return response
 
     def segunda_peticion(self):
+        if self.pagina > 1:
+            anterior = self.pagina - 1
+            urlfinalref = 'https://www.etsy.com/es/search?q=' + urllib.parse.quote(
+                self.keyword) + "&explicit=1&ship_to=" + str(self.country_iso_code) + "&ref=pagination&page=" + str(
+                anterior)
+        else:
+            urlfinalref = 'https://www.etsy.com/es/search?q=' + urllib.parse.quote(
+                self.keyword) + "&explicit=1&ship_to=" + str(self.country_iso_code)
         a_insertar = []
         if len(self.listing_ids) == 0:
             print("Listing ids vacio")
@@ -220,10 +241,10 @@ class Parser:
             'specs[listingCards][]': 'Search2_ApiSpecs_LazyListingCards',
             'specs[listingCards][1][search_request_params][detected_locale][language]': '',
             'specs[listingCards][1][search_request_params][detected_locale][currency_code]': 'EUR',
-            'specs[listingCards][1][search_request_params][detected_locale][region]': self.country_iso_code,
-            'specs[listingCards][1][search_request_params][locale][language]': '',
+            'specs[listingCards][1][search_request_params][detected_locale][region]': 'ES',
+            'specs[listingCards][1][search_request_params][locale][language]': 'en-US',
             'specs[listingCards][1][search_request_params][locale][currency_code]': 'EUR',
-            'specs[listingCards][1][search_request_params][locale][region]': self.country_iso_code,
+            'specs[listingCards][1][search_request_params][locale][region]': 'ES',
             'specs[listingCards][1][search_request_params][name_map][query]': self.keyword,
             'specs[listingCards][1][search_request_params][name_map][query_type]': 'qt',
             'specs[listingCards][1][search_request_params][name_map][results_per_page]': 'result_count',
@@ -231,9 +252,8 @@ class Parser:
             'specs[listingCards][1][search_request_params][name_map][max_price]': 'max',
             'specs[listingCards][1][search_request_params][parameters][q]': self.keyword,
             'specs[listingCards][1][search_request_params][parameters][ref]': 'pagination',
-            'specs[listingCards][1][search_request_params][parameters][page]': str(self.pagina),
-            'specs[listingCards][1][search_request_params][parameters][referrer]': 'https://www.etsy.com/search?q=' + urllib.parse.quote(
-                self.keyword) + '&ref=auto-1&as_prefix=',
+            'specs[listingCards][1][search_request_params][parameters][page]': self.pagina,
+            'specs[listingCards][1][search_request_params][parameters][referrer]': urlfinalref,
             'specs[listingCards][1][search_request_params][parameters][is_prefetch]': 'false',
             'specs[listingCards][1][search_request_params][parameters][placement]': 'wsg',
             'specs[listingCards][1][search_request_params][parameters][page_type]': 'search',
@@ -279,7 +299,7 @@ class Parser:
             'specs[listingCards][1][search_request_params][parameters][result_count]': '48',
             'specs[listingCards][1][search_request_params][user_id]': '',
             'specs[listingCards][1][is_mobile]': 'false',
-            'specs[listingCards][1][organic_listings_count]': '682295',
+            'specs[listingCards][1][organic_listings_count]': str(self.organic_count),
             'view_data_event_name': 'search_lazy_loaded_cards_specview_rendered',
         }
         if len(self.listing_ids) > 0:
@@ -288,7 +308,7 @@ class Parser:
             data['specs[listingCards][1][ad_ids][]'] = self.ad_ids
         if len(self.logging_keys) > 0:
             data['specs[listingCards][1][logging_keys][]'] = self.logging_keys
-        response = requests.post(
+        response = self.session.post(
             'https://www.etsy.com/api/v3/ajax/bespoke/member/neu/specs/listingCards',
             cookies=self.cookies,
             headers=self.headers,
