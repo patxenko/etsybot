@@ -136,7 +136,7 @@ class Parser:
             'specs[async_search_results][1][search_request_params][parameters][ref]': 'pagination',
             'specs[async_search_results][1][search_request_params][parameters][is_prefetch]': 'false',
             'specs[async_search_results][1][search_request_params][parameters][placement]': 'wsg',
-            'specs[async_search_results][1][search_request_params][user_id]': '744609194',
+            'specs[async_search_results][1][search_request_params][user_id]': '',
             'specs[async_search_results][1][request_type]': 'filters',
             'view_data_event_name': 'search_async_reformulation_specview_rendered',
         }
@@ -277,7 +277,7 @@ class Parser:
             'specs[listingCards][1][search_request_params][parameters][interleaving_option]': '',
             'specs[listingCards][1][search_request_params][parameters][should_pass_user_location_to_thrift]': 'true',
             'specs[listingCards][1][search_request_params][parameters][result_count]': '48',
-            'specs[listingCards][1][search_request_params][user_id]': '744609194',
+            'specs[listingCards][1][search_request_params][user_id]': '',
             'specs[listingCards][1][is_mobile]': 'false',
             'specs[listingCards][1][organic_listings_count]': '682295',
             'view_data_event_name': 'search_lazy_loaded_cards_specview_rendered',
