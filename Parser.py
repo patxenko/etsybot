@@ -36,11 +36,7 @@ class Parser:
         }
         # self.csrf_token = self.get_csrf_token(response1)
 
-        # accept gdpr
-        data = {
-            'third_party_consent': 'true',
-            'personalization_consent': 'true',
-        }
+
         self.headers = {
             'Accept': '*/*',
             'Accept-Language': 'en-US,en;q=0.9',
@@ -170,7 +166,7 @@ class Parser:
             'specs[async_search_results][1][search_request_params][name_map][results_per_page]': 'result_count',
             'specs[async_search_results][1][search_request_params][name_map][min_price]': 'min',
             'specs[async_search_results][1][search_request_params][name_map][max_price]': 'max',
-            'specs[async_search_results][1][search_request_params][parameters][q]': self.keyword,
+            'specs[async_search_results][1][search_request_params][parameters][q]': 'cosas',
             'specs[async_search_results][1][search_request_params][parameter][page]': self.pagina,
             'specs[async_search_results][1][search_request_params][parameters][referrer]': 'https://www.etsy.com/es/search?q=' + urllib.parse.quote(
                 self.keyword),
