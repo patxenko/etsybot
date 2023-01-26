@@ -158,8 +158,8 @@ class Parser:
         self.jar.update(response.cookies)
         self.cookies = requests.utils.dict_from_cookiejar(self.jar)
         jsondata = response.json()
-        # print(jsondata['jsData']['search_request_params']['parameters'])
-
+        print(jsondata)
+        exit()
         # OBTENEMOS LOS LAZY LOADED LISTING IDS Y LOS LAZY LOADED AD IDS y lazy_loaded_logging_keys
         if 'jsData' in jsondata:
             if 'organic_listings_count' in jsondata['jsData']:

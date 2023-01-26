@@ -11,5 +11,3 @@ response = requests.get('https://openapi.etsy.com/v3/application/buyer-taxonomy/
 
 if response.status_code == 401:
     exit('Unauthorized')
-
-
