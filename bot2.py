@@ -51,25 +51,46 @@ cookies = requests.utils.dict_from_cookiejar(jar)
 csrf_token = get_csrf_token(response1)
 headers = get_headers(csrf_token)
 
-# cookies = {
-#    'uaid': 'UBkKv13emHPLDr3vN74gWlX4wiRjZACC5Itu02F0tVJpYmaKkpVSsJehh0VSlre3X1pEqntGUr5piUeeWZ55YEVGvlItAwA.',
-#    'user_prefs': '0zFSLEtu3yN_RX4bKDUFii1TJYxjZACC5Itu02F0tJJraJCSTl5pTo6OUmqebmiwko6SazBUxAhC4SJiGQA.',
-#    'fve': '1674659479.0',
-#    'last_browse_page': 'https%3A%2F%2Fwww.etsy.com%2F',
-#    'ua': '531227642bc86f3b5fd7103a0c0b4fd6',
-#    'p': 'eyJnZHByX3RwIjoxLCJnZHByX3AiOjF9',
-#    'pla_spr': '0',
-#    '_gcl_au': '1.1.68641045.1674660812',
-#    '_ga': 'GA1.2.1789194991.1674660813',
-#    '_gid': 'GA1.2.1179219547.1674660813',
-#    '_uetsid': 'a07898009cc511ed829af15fbf5270b9',
-#    '_uetvid': 'a078eea09cc511ed93e61dbcefc65e6a',
-#    '_derived_epik': 'dj0yJnU9dk01TjR1YTVnT1dzRmVkWVdnMjlET2tHYndWaUNLbGkmbj1xYWhFVklmTEhQUV94WVdIdEIxNnB3Jm09MSZ0PUFBQUFBR1BSUzgwJnJtPTEmcnQ9QUFBQUFHUFJTODAmc3A9NQ',
-#    '_pin_unauth': 'dWlkPU4yUTBPR1psWTJJdE1EaGtOUzAwWlRBMkxUazJOMkl0WlRBNE1EazRNamMzTlRKbQ',
-#    '_ga_KR3J610VYM': 'GS1.1.1674660813.1.1.1674660893.60.0.0',
-#    'tsd': '%7B%22gnav_search_focus%22%3A%7B%22event_name%22%3A%22gnav_search_focus%22%2C%22interaction_type%22%3A%22keyboard%22%7D%2C%22gnav_perform_search%22%3A%7B%22event_name%22%3A%22gnav_perform_search%22%2C%22interaction_type%22%3A%22click%22%7D%7D',
-#    'search_options': '{"prev_search_term":"cosas%20nuevas","item_language":null,"language_carousel":null}',
-# }
+cookies = {
+    'uaid': 'oF8m2vz_DE0OOjUPt1mt_R4UzqljZACC5Evmz2F0tVJpYmaKkpVSVlhoflGQq3uWcZGZrlGWb2aKc5BPYn52Rn5isFItAwA.',
+    'user_prefs': 'VxXHLGtl-lsLhgOHomotwhYj2bpjZACC5Evmz2F0tJJraJCSTl5pTo6OUmqebmiwko6SazBUxAhC4SJiGQA.',
+    'fve': '1674721255.0',
+    'last_browse_page': 'https%3A%2F%2Fwww.etsy.com%2F',
+    'ua': '531227642bc86f3b5fd7103a0c0b4fd6',
+    'p': 'eyJnZHByX3RwIjoxLCJnZHByX3AiOjF9',
+    '_gcl_au': '1.1.1316115510.1674723169',
+    '_gid': 'GA1.2.610488509.1674723169',
+    '_pin_unauth': 'dWlkPU1UaGlOVEF6Tm1JdFltRm1NUzAwWkRGakxUZ3lOekV0WW1KaU5ERmpOV1ZsT1RZeQ',
+    'search_options': '{"prev_search_term":"tazas%20de%20madera%20personalizables","item_language":null,"language_carousel":null}',
+    'pla_spr': '0',
+    '_ga': 'GA1.1.1533638149.1674723169',
+    '_uetsid': 'cf93db509d5611ed884a4b243ddca5c5',
+    '_uetvid': 'cf94af009d5611ed85cfbd39daa7830e',
+    '_ga_KR3J610VYM': 'GS1.1.1674723169.1.1.1674724007.60.0.0',
+    'tsd': '%7B%22gnav_search_focus%22%3A%7B%22event_name%22%3A%22gnav_search_focus%22%2C%22interaction_type%22%3A%22keyboard%22%7D%2C%22gnav_perform_search%22%3A%7B%22event_name%22%3A%22gnav_perform_search%22%2C%22interaction_type%22%3A%22click%22%7D%7D',
+}
+headers = {
+    'Accept': '*/*',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Connection': 'keep-alive',
+    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    # 'Cookie': 'uaid=oF8m2vz_DE0OOjUPt1mt_R4UzqljZACC5Evmz2F0tVJpYmaKkpVSVlhoflGQq3uWcZGZrlGWb2aKc5BPYn52Rn5isFItAwA.; user_prefs=VxXHLGtl-lsLhgOHomotwhYj2bpjZACC5Evmz2F0tJJraJCSTl5pTo6OUmqebmiwko6SazBUxAhC4SJiGQA.; fve=1674721255.0; last_browse_page=https%3A%2F%2Fwww.etsy.com%2F; ua=531227642bc86f3b5fd7103a0c0b4fd6; p=eyJnZHByX3RwIjoxLCJnZHByX3AiOjF9; _gcl_au=1.1.1316115510.1674723169; _gid=GA1.2.610488509.1674723169; _pin_unauth=dWlkPU1UaGlOVEF6Tm1JdFltRm1NUzAwWkRGakxUZ3lOekV0WW1KaU5ERmpOV1ZsT1RZeQ; search_options={"prev_search_term":"tazas%20de%20madera%20personalizables","item_language":null,"language_carousel":null}; pla_spr=0; _ga=GA1.1.1533638149.1674723169; _uetsid=cf93db509d5611ed884a4b243ddca5c5; _uetvid=cf94af009d5611ed85cfbd39daa7830e; _ga_KR3J610VYM=GS1.1.1674723169.1.1.1674724007.60.0.0; tsd=%7B%22gnav_search_focus%22%3A%7B%22event_name%22%3A%22gnav_search_focus%22%2C%22interaction_type%22%3A%22keyboard%22%7D%2C%22gnav_perform_search%22%3A%7B%22event_name%22%3A%22gnav_perform_search%22%2C%22interaction_type%22%3A%22click%22%7D%7D',
+    'Origin': 'https://www.etsy.com',
+    'Referer': 'https://www.etsy.com/search?q=tazas+de+madera+personalizables',
+    'Sec-Fetch-Dest': 'empty',
+    'Sec-Fetch-Mode': 'cors',
+    'Sec-Fetch-Site': 'same-origin',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
+    'X-Page-GUID': 'f3b44e3ed39.1b3933c754eada46dc62.00',
+    'X-Requested-With': 'XMLHttpRequest',
+    'sec-ch-ua': '"Not_A Brand";v="99", "Google Chrome";v="109", "Chromium";v="109"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"Windows"',
+    'x-csrf-token': '3:1674723327:vfQ0ubIeN4B9fe8uS3vXSDtSiR6c:cd27f86c6ff11502c8e5295bbbc137aad2d82ac4800005769a70b6f4e6abfcf5',
+    'x-detected-locale': 'EUR|en-US|ES',
+    'x-recs-primary-location': 'https://www.etsy.com/search?q=tazas+de+madera+personalizables',
+    'x-recs-primary-referrer': 'https://www.etsy.com/',
+}
 
 
 data = {
@@ -99,7 +120,7 @@ data = {
 
 response = requests.post(
     'https://www.etsy.com/api/v3/ajax/bespoke/member/neu/specs/async_search_results?__a=1',
-    cookies=jar,
+    cookies=cookies,
     headers=headers,
     data=data,
     verify=False,
