@@ -330,8 +330,8 @@ class Parser:
         }
         if len(self.listing_ids) > 0:
             data['specs[listingCards][1][listing_ids][]'] = self.listing_ids
-        if len(self.ad_ids) > 0:
-            data['specs[listingCards][1][ad_ids][]'] = self.ad_ids
+        # if len(self.ad_ids) > 0:
+        #     data['specs[listingCards][1][ad_ids][]'] = self.ad_ids
         if len(self.logging_keys) > 0:
             data['specs[listingCards][1][logging_keys][]'] = self.logging_keys
         response = self.session.post(
