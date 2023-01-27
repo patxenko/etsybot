@@ -43,7 +43,8 @@ class Parser:
 
         # Primero creamos el fichero
         self.excel_name = self.dbname + datetime.now().strftime("%Y_%m_%d") + '.xlsx'
-        print("The file is : " + '\033[92m' + str(self.excel_name) + '\033[39m')
+        # print("The file is : " + '\033[92m' + str(self.excel_name) + '\033[39m')
+        print("Fichero : " + str(self.excel_name))
         wb = openpyxl.Workbook()
         ws = wb.active
         mylist = ['titulo del producto', 'URL', 'nº reviews past 15 days', 'nº reviews past 30 days']
@@ -115,7 +116,7 @@ class Parser:
         else:
             urlfinalref = 'https://www.etsy.com/search?q=' + urllib.parse.quote(
                 self.keyword) + "&explicit=1&ship_to=" + str(self.country_iso_code)
-        print("Primera peticion para la pagina " + str(self.pagina))
+        # print("Primera peticion para la pagina " + str(self.pagina))
         a_insertar = []
         self.listing_ids = []
         self.logging_keys = []
@@ -162,20 +163,20 @@ class Parser:
         if 'jsData' in jsondata:
             if 'organic_listings_count' in jsondata['jsData']:
                 self.organic_count = jsondata['jsData']['organic_listings_count']
-            else:
-                print('Datos no encontrados de organic_listings_count')
+            # else:
+            #     print('Datos no encontrados de organic_listings_count')
             if 'lazy_loaded_listing_ids' in jsondata['jsData']:
                 self.listing_ids = jsondata['jsData']['lazy_loaded_listing_ids']
-            else:
-                print('Datos no encontrados de lazy_loaded_listing_ids')
+            # else:
+            #     print('Datos no encontrados de lazy_loaded_listing_ids')
             if 'lazy_loaded_logging_keys' in jsondata['jsData']:
                 self.logging_keys = jsondata['jsData']['lazy_loaded_logging_keys']
-            else:
-                print('Datos no encontrados de lazy_loaded_logging_keys')
+            # else:
+            #     print('Datos no encontrados de lazy_loaded_logging_keys')
             if 'lazy_loaded_ad_ids' in jsondata['jsData']:
                 self.ad_ids = jsondata['jsData']['lazy_loaded_ad_ids']
-            else:
-                print('Datos no encontrados de lazy_loaded_ad_ids')
+            # else:
+            #     print('Datos no encontrados de lazy_loaded_ad_ids')
         else:
             exit('Datos no encontrados en jsondata parser 1')
 
@@ -217,7 +218,7 @@ class Parser:
                         a_insertar.append(dictio)
         if len(a_insertar) > 0:
             self.insert_db_data(a_insertar)
-        print("Productos:" + str(self.contador_productos) + " en la pagina " + str(self.pagina))
+        # print("Productos:" + str(self.contador_productos) + " en la pagina " + str(self.pagina))
         return response
 
     def segunda_peticion(self):
@@ -231,7 +232,7 @@ class Parser:
                 self.keyword) + "&explicit=1&ship_to=" + str(self.country_iso_code)
         a_insertar = []
         if len(self.listing_ids) == 0:
-            print("Listing ids vacio")
+            # print("Listing ids vacio")
             return 0
 
         data = {
@@ -351,4 +352,4 @@ class Parser:
                         a_insertar.append(dictio)
         if len(a_insertar) > 0:
             self.insert_db_data(a_insertar)
-        print("Articulos2: " + str(self.contador_productos) + " en la pagina " + str(self.pagina))
+        # print("Articulos: " + str(self.contador_productos) + " en la pagina " + str(self.pagina))
