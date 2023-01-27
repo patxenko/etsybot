@@ -5,6 +5,8 @@ import openpyxl
 import Copy_excel as ce
 from datetime import datetime
 import urllib.parse
+from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
 
 requests.packages.urllib3.disable_warnings()
 
@@ -45,13 +47,11 @@ class Parser:
         self.excel_name = self.dbname + datetime.now().strftime("%Y_%m_%d") + '.xlsx'
         # print("The file is : " + '\033[92m' + str(self.excel_name) + '\033[39m')
         print("Fichero : " + str(self.excel_name))
-        wb = openpyxl.Workbook()
-        ws = wb.active
-        mylist = ['titulo del producto', 'URL', 'nº reviews past 15 days', 'nº reviews past 30 days']
-        ws.append(mylist)
-        wb.save(self.excel_name)
+
         self.row_number = 0
         self.excel = ce.Copy_excel(self.excel_name, self.excel_name)
+
+        self.primera_tanda = []
 
     def get_csrf_token(self, response1):
         token = False
@@ -100,6 +100,13 @@ class Parser:
             except Exception as e:
                 exit(e)
 
+    def existe_enlace(self, enlace):
+        if '?' in enlace:
+            url = enlace.split('?')[0]
+        if url in self.excel.old_data:
+            return True
+        return False
+
     def request_item(self, url):
         response = self.session.get(url, verify=False)
         return response
@@ -107,7 +114,31 @@ class Parser:
     def pasar_pagina(self):
         self.pagina = self.pagina + 1
 
+    def hilillo_request(self, link):
+        url = link['url']
+        data_shop_id = link['data_shop_id']
+        data_listing_id = link['data_listing_id']
+        title = link['title']
+        item_resp = self.session.get(url, verify=False)
+        itemsoup = BeautifulSoup(item_resp.text, 'html.parser')
+        err = 0
+        if len(itemsoup.find_all("span", {"class": "wt-badge wt-badge--status-02 wt-ml-xs-2"})) > 0:
+            # print("Entramos a por reviews de " + str(enlace))
+            rev = reviews.reviews(data_shop_id, data_listing_id, self.cookies, self.headers)
+            reviews_totales = rev.get_reviews_que_cumple()
+            reviews_totales_quince = rev.contador_reviews_quince
+            if rev.error is True:
+                err = 1
+        else:
+            reviews_totales = 0
+            reviews_totales_quince = 0
+        dictio = {'title': title, 'url': url, 'last15': reviews_totales_quince,
+                  'last30': reviews_totales}
+        if err==0:
+            self.primera_tanda.append(dictio)
+
     def primera_peticion(self):
+        self.primera_tanda = []
         if self.pagina > 1:
             anterior = self.pagina - 1
             urlfinalref = 'https://www.etsy.com/search?q=' + urllib.parse.quote(
@@ -189,12 +220,15 @@ class Parser:
         else:
             exit('Datos no encontrados output')
 
+        list_links = []
         soup = BeautifulSoup(html_text, 'html.parser')
         for div in soup.find_all("li"):
             for li in div.find_all(attrs={"data-page-type": "search"}):
                 for link in li.find_all('a'):
                     title = link.get('title')
                     enlace = link.get('href')
+                    if self.existe_enlace(enlace) is True:
+                        continue
                     data_shop_id = li.get('data-shop-id')
                     data_listing_id = link.get('data-listing-id')
                     if title is not None and enlace is not None:
@@ -202,26 +236,20 @@ class Parser:
                             self.deshechados = self.deshechados + 1
                             continue
                         self.contador_productos = self.contador_productos + 1
-                        item_resp = self.request_item(enlace)
-                        itemsoup = BeautifulSoup(item_resp.text, 'html.parser')
 
-                        if len(itemsoup.find_all("span", {"class": "wt-badge wt-badge--status-02 wt-ml-xs-2"})) > 0:
-                            # print("Entramos a por reviews de " + str(enlace))
-                            rev = reviews.reviews(data_shop_id, data_listing_id, self.cookies, self.headers)
-                            reviews_totales = rev.get_reviews_que_cumple()
-                            reviews_totales_quince = rev.contador_reviews_quince
-                        else:
-                            reviews_totales = 0
-                            reviews_totales_quince = 0
-                        dictio = {'title': title, 'url': enlace, 'last15': reviews_totales_quince,
-                                  'last30': reviews_totales}
-                        a_insertar.append(dictio)
-        if len(a_insertar) > 0:
-            self.insert_db_data(a_insertar)
+                        dictio = {'title': title, 'url': enlace, 'data_shop_id': data_shop_id,
+                                  'data_listing_id': data_listing_id}
+                        list_links.append(dictio)
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            for link in list_links:
+                executor.submit(self.hilillo_request, link)
+        if len(self.primera_tanda) > 0:
+            self.insert_db_data(self.primera_tanda)
         # print("Productos:" + str(self.contador_productos) + " en la pagina " + str(self.pagina))
         return response
 
     def segunda_peticion(self):
+        self.primera_tanda = []
         if self.pagina > 1:
             anterior = self.pagina - 1
             urlfinalref = 'https://www.etsy.com/es/search?q=' + urllib.parse.quote(
@@ -230,7 +258,6 @@ class Parser:
         else:
             urlfinalref = 'https://www.etsy.com/es/search?q=' + urllib.parse.quote(
                 self.keyword) + "&explicit=1&ship_to=" + str(self.country_iso_code)
-        a_insertar = []
         if len(self.listing_ids) == 0:
             # print("Listing ids vacio")
             return 0
@@ -325,12 +352,14 @@ class Parser:
         else:
             exit('Datos no encontrados en busqueda')
         soup = BeautifulSoup(html_text, 'html.parser')
-
+        list_links = []
         for div in soup.find_all("li"):
             for li in div.find_all(attrs={"data-page-type": "search"}):
                 for link in li.find_all('a'):
                     title = link.get('title')
                     enlace = link.get('href')
+                    if self.existe_enlace(enlace) is True:
+                        continue
                     data_shop_id = li.get('data-shop-id')
                     data_listing_id = link.get('data-listing-id')
                     if title is not None and enlace is not None:
@@ -338,18 +367,12 @@ class Parser:
                             self.deshechados = self.deshechados + 1
                             continue
                         self.contador_productos = self.contador_productos + 1
-                        item_resp = self.request_item(enlace)
-                        itemsoup = BeautifulSoup(item_resp.text, 'html.parser')
-                        if len(itemsoup.find_all("span", {"class": "wt-badge wt-badge--status-02 wt-ml-xs-2"})) > 0:
-                            rev = reviews.reviews(data_shop_id, data_listing_id, self.cookies, self.headers)
-                            reviews_totales = rev.get_reviews_que_cumple()
-                            reviews_totales_quince = rev.contador_reviews_quince
-                        else:
-                            reviews_totales = 0
-                            reviews_totales_quince = 0
-                        dictio = {'title': title, 'url': enlace, 'last15': reviews_totales_quince,
-                                  'last30': reviews_totales}
-                        a_insertar.append(dictio)
-        if len(a_insertar) > 0:
-            self.insert_db_data(a_insertar)
+                        dictio = {'title': title, 'url': enlace, 'data_shop_id': data_shop_id,
+                                  'data_listing_id': data_listing_id}
+                        list_links.append(dictio)
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            for link in list_links:
+                executor.submit(self.hilillo_request, link)
+        if len(self.primera_tanda) > 0:
+            self.insert_db_data(self.primera_tanda)
         # print("Articulos: " + str(self.contador_productos) + " en la pagina " + str(self.pagina))
