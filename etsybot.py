@@ -29,7 +29,13 @@ def main(argv):
     print("El proceso puede tardar un rato. Sea paciente")
     for a in range(1, int(number_pages) + 1):
         response1 = dr.primera_peticion()
+        if response1 == 2:
+            dr.pasar_pagina()
+            continue
         response2 = dr.segunda_peticion()
+        if response2 == 2:
+            dr.pasar_pagina()
+            continue
         if response1 == 0 or response2 == 0:
             break
         print(str(dr.contador_productos) + " items parseados en la pagina " + str(dr.pagina))

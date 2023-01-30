@@ -33,7 +33,7 @@ class Copy_excel:
             ss_sheet1.title = sheet_name
             self.wb.save(src)
             self.ws = self.wb[sheet_name]
-        mylist = ['titulo del producto', 'URL', 'nº reviews past 15 days', 'nº reviews past 30 days']
+        mylist = ['titulo del producto', 'URL', 'nº reviews past 15 days', 'nº reviews past 30 days', 'Img']
         self.ws.append(mylist)
         self.wb.save(src)
         self.dest = destination
@@ -43,6 +43,9 @@ class Copy_excel:
     def write_workbook(self, column_dest, value):
         c = self.ws.cell(row=self.row_dest, column=column_dest)
         c.value = value
+        self.row_dest = self.row_dest + 1
+
+    def pasafila(self):
         self.row_dest = self.row_dest + 1
 
     # Save excel file

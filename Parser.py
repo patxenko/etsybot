@@ -2,11 +2,14 @@ import requests
 from bs4 import BeautifulSoup
 import reviews as reviews
 import openpyxl
+from openpyxl.drawing.image import Image
 import Copy_excel as ce
 from datetime import datetime
 import urllib.parse
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
+import urllib3
+import io
 
 requests.packages.urllib3.disable_warnings()
 
@@ -92,13 +95,38 @@ class Parser:
     def insert_db_data(self, a_insertar):
         for a in a_insertar:
             try:
+                imgsrc = a['img']
+                if imgsrc is None:
+                    continue
                 if '?' in a['url']:
                     url = a['url'].split('?')[0]
+                imgsrc = a['img']
+                print("tenemos " + imgsrc)
+                # image
+                http = urllib3.PoolManager()
+                r = http.request('GET', imgsrc)
+                image_file = io.BytesIO(r.data)
                 task = (a['title'], url, a['last15'], a['last30'])
+                celda = "E" + str(self.excel.row_dest)
+                print("tenemos2 " + imgsrc)
+
+                print("tenemos3 " + imgsrc)
+                imga = openpyxl.drawing.image.Image(image_file)
+                # The Coordinates where the image would be pasted
+                # (an image could span several rows and columns
+                # depending on it's size)
+                imga.anchor = celda
+                imga.height = 80
+                imga.width = 80
+
+                # Adding the image to the worksheet
+                # (with attributes like position)
+                self.excel.ws.add_image(imga)
                 self.excel.ws.append(task)
                 self.excel.save_excel()
+                self.excel.pasafila()
             except Exception as e:
-                exit(e)
+                exit("Aqui mismo "+str(e))
 
     def existe_enlace(self, enlace):
         if '?' in enlace:
@@ -119,6 +147,7 @@ class Parser:
         data_shop_id = link['data_shop_id']
         data_listing_id = link['data_listing_id']
         title = link['title']
+        imgsrc = link['img']
         item_resp = self.session.get(url, verify=False)
         itemsoup = BeautifulSoup(item_resp.text, 'html.parser')
         err = 0
@@ -133,8 +162,8 @@ class Parser:
             reviews_totales = 0
             reviews_totales_quince = 0
         dictio = {'title': title, 'url': url, 'last15': reviews_totales_quince,
-                  'last30': reviews_totales}
-        if err==0:
+                  'last30': reviews_totales, 'img': imgsrc}
+        if err == 0:
             self.primera_tanda.append(dictio)
 
     def primera_peticion(self):
@@ -189,7 +218,10 @@ class Parser:
 
         self.jar.update(response.cookies)
         self.cookies = requests.utils.dict_from_cookiejar(self.jar)
-        jsondata = response.json()
+        try:
+            jsondata = response.json()
+        except Exception as er:
+            return 2
         # OBTENEMOS LOS LAZY LOADED LISTING IDS Y LOS LAZY LOADED AD IDS y lazy_loaded_logging_keys
         if 'jsData' in jsondata:
             if 'organic_listings_count' in jsondata['jsData']:
@@ -224,6 +256,7 @@ class Parser:
         soup = BeautifulSoup(html_text, 'html.parser')
         for div in soup.find_all("li"):
             for li in div.find_all(attrs={"data-page-type": "search"}):
+                img_src = None
                 for link in li.find_all('a'):
                     title = link.get('title')
                     enlace = link.get('href')
@@ -231,21 +264,25 @@ class Parser:
                         continue
                     data_shop_id = li.get('data-shop-id')
                     data_listing_id = link.get('data-listing-id')
+                    img_src = link.get('src')
                     if title is not None and enlace is not None:
                         if data_listing_id is None or data_shop_id is None:
                             self.deshechados = self.deshechados + 1
                             continue
                         self.contador_productos = self.contador_productos + 1
+                img = li.find_all('img')[0]
+                img_src = img.get('src')
+                dictio = {'title': title, 'url': enlace, 'data_shop_id': data_shop_id,
+                          'data_listing_id': data_listing_id, 'img': img_src}
+                list_links.append(dictio)
 
-                        dictio = {'title': title, 'url': enlace, 'data_shop_id': data_shop_id,
-                                  'data_listing_id': data_listing_id}
-                        list_links.append(dictio)
         with ThreadPoolExecutor(max_workers=2) as executor:
             for link in list_links:
                 executor.submit(self.hilillo_request, link)
         if len(self.primera_tanda) > 0:
             self.insert_db_data(self.primera_tanda)
         # print("Productos:" + str(self.contador_productos) + " en la pagina " + str(self.pagina))
+        exit()
         return response
 
     def segunda_peticion(self):
@@ -343,7 +380,10 @@ class Parser:
         )
         self.jar.update(response.cookies)
         self.cookies = requests.utils.dict_from_cookiejar(self.jar)
-        jsondata = response.json()
+        try:
+            jsondata = response.json()
+        except Exception as er:
+            return 2
         if 'output' in jsondata:
             if 'listingCards' in jsondata['output']:
                 html_text = jsondata['output']['listingCards']
