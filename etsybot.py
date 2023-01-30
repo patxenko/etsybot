@@ -42,6 +42,8 @@ def main(argv):
         dr.pasar_pagina()
 
     fin = time.time()
+    dr.delete_images()
+    #Limpiamos images
     print("Tiempo de ejecucion: " + str(fin - inicio))
 
 

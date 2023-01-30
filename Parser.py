@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import reviews as reviews
+import fnmatch
 import openpyxl
 from openpyxl.drawing.image import Image
 import Copy_excel as ce
@@ -10,6 +11,7 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 import urllib3
 import io
+import os
 
 requests.packages.urllib3.disable_warnings()
 
@@ -47,12 +49,12 @@ class Parser:
         self.dbname = self.create_db_name()
 
         # Primero creamos el fichero
-        self.excel_name = self.dbname + datetime.now().strftime("%Y_%m_%d") + '.xlsx'
+        self.excel_name = self.dbname + datetime.now().strftime("_%Y_%m_%d_%H_%M") + '.xlsx'
         # print("The file is : " + '\033[92m' + str(self.excel_name) + '\033[39m')
         print("Fichero : " + str(self.excel_name))
 
         self.row_number = 0
-        self.excel = ce.Copy_excel(self.excel_name, self.excel_name)
+        self.excel = ce.Copy_excel(self.dbname, self.excel_name)
 
         self.primera_tanda = []
 
@@ -92,6 +94,15 @@ class Parser:
         }
         return headers
 
+    def delete_images(self):
+        self.excel.close_workbook()
+        for file_name in os.listdir('images/'):
+            if fnmatch.fnmatch(file_name, '*.jpg'):
+                try:
+                    os.remove('images/' + file_name)
+                except Exception:
+                    continue
+
     def insert_db_data(self, a_insertar):
         for a in a_insertar:
             try:
@@ -100,33 +111,29 @@ class Parser:
                     continue
                 if '?' in a['url']:
                     url = a['url'].split('?')[0]
-                imgsrc = a['img']
-                print("tenemos " + imgsrc)
-                # image
-                http = urllib3.PoolManager()
-                r = http.request('GET', imgsrc)
-                image_file = io.BytesIO(r.data)
-                task = (a['title'], url, a['last15'], a['last30'])
-                celda = "E" + str(self.excel.row_dest)
-                print("tenemos2 " + imgsrc)
 
-                print("tenemos3 " + imgsrc)
-                imga = openpyxl.drawing.image.Image(image_file)
-                # The Coordinates where the image would be pasted
-                # (an image could span several rows and columns
-                # depending on it's size)
-                imga.anchor = celda
-                imga.height = 80
-                imga.width = 80
+                # image
+                uri = imgsrc.split('/')
+                urifin = uri[len(uri) - 1]
+                # print("tenemos " + str(imgsrc))
+                with open(os.path.join('images/' + urifin), 'wb') as f:
+                    f.write(requests.get(imgsrc, verify=False).content)
+                img = openpyxl.drawing.image.Image('images/' + urifin)
+                img.anchor = 'E' + str(self.excel.row_dest)
+                img.height = 50
+                img.width = 50
 
                 # Adding the image to the worksheet
                 # (with attributes like position)
-                self.excel.ws.add_image(imga)
+                task = (a['title'], url, a['last15'], a['last30'])
                 self.excel.ws.append(task)
+                self.excel.ws.add_image(img)
                 self.excel.save_excel()
                 self.excel.pasafila()
             except Exception as e:
-                exit("Aqui mismo "+str(e))
+                print("Ha habido una falla temporal con la conexion")
+                self.delete_images()
+                exit()
 
     def existe_enlace(self, enlace):
         if '?' in enlace:
@@ -270,19 +277,18 @@ class Parser:
                             self.deshechados = self.deshechados + 1
                             continue
                         self.contador_productos = self.contador_productos + 1
-                img = li.find_all('img')[0]
-                img_src = img.get('src')
-                dictio = {'title': title, 'url': enlace, 'data_shop_id': data_shop_id,
-                          'data_listing_id': data_listing_id, 'img': img_src}
-                list_links.append(dictio)
 
+                        img = li.find_all('img')[0]
+                        img_src = img.get('src')
+                        dictio = {'title': title, 'url': enlace, 'data_shop_id': data_shop_id,
+                                  'data_listing_id': data_listing_id, 'img': img_src}
+                        list_links.append(dictio)
         with ThreadPoolExecutor(max_workers=2) as executor:
             for link in list_links:
                 executor.submit(self.hilillo_request, link)
         if len(self.primera_tanda) > 0:
             self.insert_db_data(self.primera_tanda)
         # print("Productos:" + str(self.contador_productos) + " en la pagina " + str(self.pagina))
-        exit()
         return response
 
     def segunda_peticion(self):
@@ -367,8 +373,8 @@ class Parser:
         }
         if len(self.listing_ids) > 0:
             data['specs[listingCards][1][listing_ids][]'] = self.listing_ids
-        # if len(self.ad_ids) > 0:
-        #     data['specs[listingCards][1][ad_ids][]'] = self.ad_ids
+        if len(self.ad_ids) > 0:
+            data['specs[listingCards][1][ad_ids][]'] = self.ad_ids
         if len(self.logging_keys) > 0:
             data['specs[listingCards][1][logging_keys][]'] = self.logging_keys
         response = self.session.post(
@@ -407,10 +413,14 @@ class Parser:
                             self.deshechados = self.deshechados + 1
                             continue
                         self.contador_productos = self.contador_productos + 1
+
+                        img = li.find_all('img')[0]
+                        img_src = img.get('src')
                         dictio = {'title': title, 'url': enlace, 'data_shop_id': data_shop_id,
-                                  'data_listing_id': data_listing_id}
+                                  'data_listing_id': data_listing_id, 'img': img_src}
                         list_links.append(dictio)
-        with ThreadPoolExecutor(max_workers=2) as executor:
+
+        with ThreadPoolExecutor(max_workers=3) as executor:
             for link in list_links:
                 executor.submit(self.hilillo_request, link)
         if len(self.primera_tanda) > 0:

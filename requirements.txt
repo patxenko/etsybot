@@ -1,6 +1,6 @@
 requests
 bs4
-openpyxl==2.5.11
+openpyxl == 2.5.0
 pathlib
 urllib3
-io
+pillow
