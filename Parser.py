@@ -120,12 +120,13 @@ class Parser:
                     f.write(requests.get(imgsrc, verify=False).content)
                 img = openpyxl.drawing.image.Image('images/' + urifin)
                 img.anchor = 'E' + str(self.excel.row_dest)
-                img.height = 50
-                img.width = 50
+                img.height = 100
+                img.width = 140
 
                 # Adding the image to the worksheet
                 # (with attributes like position)
                 task = (a['title'], url, a['last15'], a['last30'])
+                self.excel.ws.row_dimensions[self.excel.row_dest].height = 80
                 self.excel.ws.append(task)
                 self.excel.ws.add_image(img)
                 self.excel.save_excel()
@@ -289,6 +290,7 @@ class Parser:
         if len(self.primera_tanda) > 0:
             self.insert_db_data(self.primera_tanda)
         # print("Productos:" + str(self.contador_productos) + " en la pagina " + str(self.pagina))
+        exit()
         return response
 
     def segunda_peticion(self):

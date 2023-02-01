@@ -35,11 +35,14 @@ class Copy_excel:
             self.wb.save(self.dest)
             self.ws = self.wb[sheet_name]
             mylist = ['titulo del producto', 'URL', 'nº reviews past 15 days', 'nº reviews past 30 days', 'Img']
+            self.ws.column_dimensions['A'].width = 30
+            self.ws.column_dimensions['B'].width = 40
+            self.ws.column_dimensions['E'].width = 20
             self.ws.append(mylist)
             self.wb.save(self.dest)
             self.row_dest = 2
         except Exception as e:
-            print("Ha ocurrido un error: pruebe a cerrar todos los ficheros que usa el bot")
+            print("Ha ocurrido un error: pruebe a cerrar todos los ficheros que usa el bot " +str(e))
             exit()
 
     # Write the value in the cell defined by row_dest+column_dest
