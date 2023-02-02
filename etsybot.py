@@ -25,6 +25,7 @@ def main(argv):
 
     inicio = time.time()
     dr = Parser.Parser(keyword, country)
+    dr.delete_imgs()
     print("Parseando las " + str(number_pages) + " primeras paginas en " + str(country) + " de: " + str(keyword))
     print("El proceso puede tardar un rato. Sea paciente")
     for a in range(1, int(number_pages) + 1):

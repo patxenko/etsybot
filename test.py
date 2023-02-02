@@ -23,4 +23,6 @@ worksheet.insert_image('B12', 'test.jpg', {'x_offset': 15, 'y_offset': 10})
 worksheet.write('A23', 'Insert a scaled image:')
 worksheet.insert_image('B23', 'python.png', {'x_scale': 0.5, 'y_scale': 0.5})
 
+os.remove('test.jpg')
+
 workbook.close()

@@ -7,11 +7,9 @@ from openpyxl.drawing.image import Image
 import Copy_excel as ce
 from datetime import datetime
 import urllib.parse
-from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
-import urllib3
-import io
 import os
+import uuid
 
 requests.packages.urllib3.disable_warnings()
 
@@ -103,6 +101,14 @@ class Parser:
                 except Exception:
                     continue
 
+    def delete_imgs(self):
+        for file_name in os.listdir('images/'):
+            if fnmatch.fnmatch(file_name, '*.jpg'):
+                try:
+                    os.remove('images/' + file_name)
+                except Exception:
+                    continue
+
     def insert_db_data(self, a_insertar):
         for a in a_insertar:
             try:
@@ -114,7 +120,7 @@ class Parser:
 
                 # image
                 uri = imgsrc.split('/')
-                urifin = uri[len(uri) - 1]
+                urifin = str(uuid.uuid1()) + uri[len(uri) - 1]
                 # print("tenemos " + str(imgsrc))
                 with open(os.path.join('images/' + urifin), 'wb') as f:
                     f.write(requests.get(imgsrc, verify=False).content)
